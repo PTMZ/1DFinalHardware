@@ -5,6 +5,7 @@ module map (
     input player2Pos,
     input player1Proj,
     input player2Proj,
+    input showBits[7],
     output mapArr[7][7][24]
 ) {
     //sig rst; //reset signal
@@ -13,6 +14,7 @@ module map (
     const COLOR_P1 = 6hff0000;      //red
     const COLOR_P2 = 6h0000ff;      //blue
     const COLOR_PROJ = 6h2E0854;    //purple
+    const COLOR_OBSTACLE = 6h4A7023;//dark green
 
     var x, y, pr;
 
@@ -20,8 +22,17 @@ module map (
         for (x = 0; x < 7; x++) {
             for (y = 0; y < 7; y++) {
                 mapArr[x][y] = COLOR_BLACK;
+
+                //for the obstacles:
+                if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+
+                //for the players:
                 if (player1Pos) mapArr[x][y] = COLOR_P1;
                 if (player2Pos) mapArr[x][y] = COLOR_P2;
+
+                //for the projectiles:
                 for (pr : player1Proj) {
                     mapArr[x][y] = COLOR_PROJ;
                 }
