@@ -14,7 +14,7 @@ module map (
     const COLOR_P2 = 6h0000ff;      //blue
     const COLOR_PROJ = 6h2E0854;    //purple
 
-    var x, y;
+    var x, y, pr;
 
     always {
         for (x = 0; x < 7; x++) {
