@@ -1,0 +1,34 @@
+module map (
+    input clk,
+    input rst,
+    input player1Pos,
+    input player2Pos,
+    input player1Proj,
+    input player2Proj,
+    output mapArr[7][7][24]
+) {
+    //sig rst; //reset signal
+
+    const COLOR_BLACK = 6h000000;   //6 digits cuz each hexa digit represents 4 binary
+    const COLOR_P1 = 6hff0000;      //red
+    const COLOR_P2 = 6h0000ff;      //blue
+    const COLOR_PROJ = 6h2E0854;    //purple
+
+    var x, y;
+
+    always {
+        for (x = 0; x < 7; x++) {
+            for (y = 0; y < 7; y++) {
+                mapArr[x][y] = COLOR_BLACK;
+                if (player1Pos) mapArr[x][y] = COLOR_P1;
+                if (player2Pos) mapArr[x][y] = COLOR_P2;
+                for (pr : player1Proj) {
+                    mapArr[x][y] = COLOR_PROJ;
+                }
+                for (pr : player2Proj) {
+                    mapArr[x][y] = COLOR_PROJ;
+                }
+            }
+        }
+    }
+}
