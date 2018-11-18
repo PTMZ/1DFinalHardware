@@ -1,0 +1,90 @@
+module player #(
+  PROJAMT = 7 : PROJAMT > 0 // Width of the output
+  )
+  
+    (
+    input clk,  // clock
+    input rst,  // reset
+    input up,
+    input down,
+    input left,
+    input right,
+    input projectileout,
+    input otherplayerpos[14],
+    //output health[2], // 1-4 health
+    output positionx[7], // 7bits of x 1 hot encoding
+    output positiony[7], // 7bits of y 1 hot encoding
+    output gameend
+  ) {
+  
+  dff storex[7](.clk(clk));
+  dff storey[7](.clk(clk));
+  
+  // instantiate i for counting
+  sig i;
+  
+  always {  
+  // Movement to update position
+    if(up){
+      // Check boundary
+      if ((storey.q << 1) == 7b0000000)
+        storey.d = storey.q;
+      // Check if other player is in same square
+      else if (c{storex.q, (storey.q << 1)} == otherplayerpos)
+        storey.d = storey.q;
+      // Else Move
+      else
+        storey.d = storey.q << 1;
+      }
+   
+    if(down){
+      // Check boundary
+      if ((storey.q  >> 1) == 7b0000000)
+        storey.d = storey.q;
+      // Check if other player is in same square
+      else if (c{storex.q, (storey.q >> 1)} == otherplayerpos)
+        storey.d = storey.q;
+      // Else Move
+      else
+        storey.d = storey.q >> 1;
+      }
+    
+    if(left){
+      // Check boundary
+      if ((storex.q << 1) == 7b0000000)
+        storex.d = storex.q;
+      // Check if other player is in same square
+      else if (c{(storex.q << 1), storey.q} == otherplayerpos)
+        storex.d = storex.q;
+      // Else Move
+      else
+        storex.d = storex.q << 1;
+      }
+    
+    if(right){
+      // Check boundary
+      if ((storex.q >> 1) == 7b0000000)
+        storex.d = storex.q;
+      // Check if other player is in same square
+      else if (c{(storex.q >> 1), storey.q} == otherplayerpos)
+        storex.d = storex.q;
+      // Else Move
+      else
+        storex.d = storex.q >> 1;
+      }
+      
+      //Set to update the output to be the output calculated
+      positionx = storex.q;
+      positiony = storey.q;
+    
+    // to check if hit for each projectile check the x and y of player coincide with projectile.
+    i = 0;
+    for (i = 0; i <= PROJAMT; i++) {
+    // check each position at each index. Concatenation of both posx and posy assuming 1 health
+      if(projectileout[i] == c{storex.q, storey.q})
+        gameend = 1;
+      else
+        gameend = 0;
+      }
+  }
+}
