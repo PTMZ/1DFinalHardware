@@ -32,7 +32,7 @@ module map (
                 if (player1Pos) mapArr[x][y] = COLOR_P1;
                 if (player2Pos) mapArr[x][y] = COLOR_P2;
 
-                //for the projectiles:
+                //for the projectiles :
                 for (pr : player1Proj) {
                     mapArr[x][y] = COLOR_PROJ;
                 }
