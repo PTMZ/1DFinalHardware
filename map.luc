@@ -1,8 +1,10 @@
 module map (
     input clk,
     input rst,
-    input player1Pos,
-    input player2Pos,
+    input player1Posx,
+    input player1Posy,
+    input player2Posx,
+    input player2Posy,
     input player1Proj,
     input player2Proj,
     input showBits[7],
@@ -29,8 +31,8 @@ module map (
                 if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
 
                 //for the players:
-                if (player1Pos) mapArr[x][y] = COLOR_P1;
-                if (player2Pos) mapArr[x][y] = COLOR_P2;
+                if (player1Posx == x && player1Posy == y) mapArr[x][y] = COLOR_P1;
+                if (player2Posx == x && player2Posy == y) mapArr[x][y] = COLOR_P2;
 
                 //for the projectiles :
                 for (pr : player1Proj) {
