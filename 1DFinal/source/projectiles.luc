@@ -7,7 +7,8 @@ module projectiles (
     input remove,
     output show,
     output posX[7],
-    output posY[7]
+    output posY[7],
+    output fb
   ) {
   
   .clk(clk) {
@@ -22,8 +23,8 @@ module projectiles (
     button_conditioner bcRight;     // button input conditioner
     
     .rst(rst) {
-       dff ctr[22];
-       dff cooldown[22];
+       dff ctr[26];
+       customCounter cooldown;
        dff showVar;
        dff dirVar[2];
        dff posXVar[7];
@@ -32,6 +33,11 @@ module projectiles (
   }
   
   always {
+    cooldown.amount = 50000000;
+    cooldown.resetCd = 0;
+    //ctr.amount = 25000000;
+    //ctr.resetCd = 0;
+    
     bcUp.in = fireButtons[0];
     bcDown.in = fireButtons[1];
     bcLeft.in = fireButtons[2];
@@ -42,13 +48,20 @@ module projectiles (
     edLeft.in = bcLeft.out;
     edRight.in = bcRight.out;
     
+    // fb = fireButtons[0];
+    /*
+    if(posXVar.q == 0 || posYVar.q == 0 || remove==1){
+      showVar.d = 0;
+    }
+    */
+    
     if(showVar.q == 0){
-      if(cooldown.q == 0){
+      if(cooldown.ans == 1){
         if(edUp.out){
           showVar.d = 1;        
           dirVar.d = 0;
-          ctr.d = 20000000;
-          cooldown.d = 50000000;
+          ctr.d = 0;
+          cooldown.resetCd = 1;
           posXVar.d = player1X;
           posYVar.d = player1Y << 1;
           
@@ -56,32 +69,33 @@ module projectiles (
         else if(edDown.out){
           showVar.d = 1;        
           dirVar.d = 1;
-          ctr.d = 20000000;
-          cooldown.d = 25000000;
+          ctr.d = 0;
+          cooldown.resetCd = 1;
           posXVar.d = player1X;
           posYVar.d = player1Y >> 1;
         }
         else if(edLeft.out){
           showVar.d = 1;        
           dirVar.d = 2;
-          ctr.d = 20000000;
-          cooldown.d = 25000000;
+          ctr.d = 0;
+          cooldown.resetCd = 1;
           posXVar.d = player1X << 1;
           posYVar.d = player1Y;
         }
         else if(edRight.out){
           showVar.d = 1;        
           dirVar.d = 3;
-          ctr.d = 20000000;
-          cooldown.d = 25000000;
+          ctr.d = 0;
+          cooldown.resetCd = 1;
           posXVar.d = player1X >> 1;
           posYVar.d = player1Y;
         }
       }
     }
     else{
-      if(ctr.q == 1){
+      if(ctr.q == 0){
         // move
+        
         if(dirVar.q == 0){
           posYVar.d = posYVar.q << 1;
         }
@@ -89,20 +103,23 @@ module projectiles (
           posYVar.d = posYVar.q >> 1;
         }
         else if(dirVar.q == 2){
-          posXVar.d = posYVar.q << 1;
+          posXVar.d = posXVar.q << 1;
         }
         else if(dirVar.q == 3){
-          posXVar.d = posYVar.q >> 1;
+          posXVar.d = posXVar.q >> 1;
         }
+        
       }
-      ctr.d = ctr.q <= 0 ? 20000000 : ctr.q-1;
     }
-    
+    ctr.d = ctr.q + 1;
+    /*
     if(posXVar.q == 0 || posYVar.q == 0 || remove==1){
       showVar.d = 0;
     }
+    */
     
-    cooldown.d = cooldown.q-1 >= 0 ? cooldown.q-1 : 0;
+    // cooldown.d = (cooldown.q == 0) ? cooldown.q : cooldown.q-1;
+    fb = ctr.q[25];
     show = showVar.q;
     posX = posXVar.q;
     posY = posYVar.q;
