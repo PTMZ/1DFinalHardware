@@ -1,0 +1,59 @@
+ module map ( 
+      input clk, 
+      input rst, 
+      input player1Posx[7], 
+      input player1Posy[7], 
+      input player2Posx[7], 
+      input player2Posy[7], 
+      input player1Projx[7], 
+      input player1Projy[7], 
+      input player2Projx[7], 
+      input player2Projy[7], 
+      //put showBits[7], 
+      output mapArr[7][7][24] 
+  ) { 
+      //sig rst; //reset signal 
+  
+ 
+      const COLOR_BLACK = 24h000000;  //6 digits cuz each hexa digit represents 4 binary 
+      const COLOR_P1 = 24h00ff00;     //red 
+      const COLOR_P2 = 24h0000ff;      //blue 
+      const COLOR_PROJ = 24h00ffff;    //purple 2E0854
+      const COLOR_OBSTACLE = 24hff0000;//dark green 
+  
+ 
+      var x, y, pr; 
+  
+ 
+      always { 
+          for (x = 0; x < 7; x++) { 
+              for (y = 0; y < 7; y++) { 
+                  mapArr[x][y] = COLOR_BLACK; 
+  
+ 
+                  //for the players: 
+                  if (player1Posx == x && player1Posy == y) mapArr[x][y] = COLOR_P1; 
+                  if (player2Posx == x && player2Posy == y) mapArr[x][y] = COLOR_P2; 
+  
+ 
+                  //for the projectiles : 
+                  if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ; 
+                  if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ; 
+                  //add the for-loop later: 
+                  //for (pr : player1Proj) { 
+                      //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ; 
+                  //} 
+                  //for (pr : player2Proj) { 
+                      //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ; 
+                  //} 
+        
+                  //for the obstacles: 
+                  if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
+                  if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
+                  if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
+  
+ 
+              } 
+          } 
+      } 
+} 

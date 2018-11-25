@@ -1,0 +1,36 @@
+module display (
+    input clk, //clock
+    input rst, //reset
+    input mapArr[7][7][24],
+    output datalines[7]
+  )
+  
+  
+  {
+  
+  dff counter[21](.clk(clk), .rst(rst)); //why is counter 21?
+  sig foo[11];
+  sig ledNo[3];
+  var r;
+
+  always {
+    counter.d = counter.q + 1;
+    datalines = 0;
+    
+   for (r=0; r<7; r++) {
+      if (counter.q < 64*24*7) {   //first 1536*8 clocks reserved for LED signal
+        ledNo = counter.q / (64*24);    
+        foo = counter.q - ((counter.q/(64*24))*(64*24)); //what is foo for? foo = counter.q % (64*24)
+        if (mapArr[r][ledNo][23-(foo>>6)] == 0) { //if grb[23-(foo SHR6bits)]? //within 64 clock cycles
+          if (foo[5:0] < 20) datalines[r] = 1; //corresponds to Th of logic bit 0 
+          //if (ledNo == 2) out[r] = 0;
+        }
+        else {
+          if (foo[5:0] < 40) datalines[r] = 1; //corresponds to Th of logic bit 1
+          //if (ledNo == 2) out[r] = 0;
+          //leaving only this line behind changes first three to green, rest to purplish white no gradient
+        }
+      }
+   }
+  }
+}
