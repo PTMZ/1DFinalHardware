@@ -1,0 +1,157 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,       // AVR RX buffer full
+    output io_led[3][8], 
+    output io_seg[8], 
+    output io_sel[4], 
+    //input mapArr[7][7][24],
+    //input player1Posx[7],
+    //input player1Posy[7],
+    //input player2Posx[7],
+    //input player2Posy[7],
+    //input player1Projx[7],
+    //input player1Projy[7],
+    //input player2Projx[7],
+    //input player2Projy[7],
+    //output io_button[5],
+    input io_dip[3][8]
+  ) {
+  
+  sig rst;                  // reset signal
+  sig testplayer;
+  sig testproj;
+  
+  //constants:
+  const PLAYER1_POSX = 7b0000000;
+  const PLAYER1_POSY = 7b0000000;
+  const PLAYER2_POSX = 7b0001000;
+  const PLAYER2_POSY = 7b0000000;
+  const PLAYER1_PROJX = 7b0000001;
+  const PLAYER1_PROJY = 7b0000000;
+  const PLAYER2_PROJX = 7b0000010;
+  const PLAYER2_PROJY = 7b01000000;
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    map map(.rst(rst));
+  }
+  
+  var r, ledNo;
+  
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    led = 8h00;             // turn LEDs off
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    io_led = 3x{{8h00}};  //turn LED off
+    io_seg = 8hff;  //turn segments off
+    io_sel = 4hf;  //select no digits
+    
+    testplayer = io_dip[0][0];
+    testproj = io_dip[0][1];
+    
+    map.player1Posx = PLAYER1_POSX;
+    map.player1Posy = PLAYER1_POSY;
+    map.player2Posx = PLAYER2_POSX;
+    map.player2Posy = PLAYER2_POSY;
+
+    map.player1Projx = PLAYER1_PROJX;
+    map.player1Projy = PLAYER1_PROJY;
+    map.player2Projx = PLAYER2_PROJX;
+    map.player2Projy = PLAYER2_PROJY;  
+    
+    if(testplayer) {
+      //show values of the players  
+      //if (PLAYER1_POSY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
+        //if (PLAYER1_POSY[6] == 1) io_led[0] = PLAYER1_POSX;
+        //if (PLAYER1_POSY[5] == 1) io_led[1] = PLAYER1_POSX;
+        //if (PLAYER1_POSY[4] == 1) io_led[2] = PLAYER1_POSX;
+      //}  
+      //if (PLAYER2_POSY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
+        //if (PLAYER2_POSY[6] == 1) io_led[0] = PLAYER2_POSX;
+        //if (PLAYER2_POSY[5] == 1) io_led[1] = PLAYER2_POSX;
+        //if (PLAYER2_POSY[4] == 1) io_led[2] = PLAYER2_POSX;
+      //}
+      
+     
+      io_led[0][7] = 0;
+      io_led[1][7] = 0;
+      io_led[2][7] = 0;
+      
+      //for player1:
+      for(r=0; r<3; r++){
+        for(ledNo=0; ledNo<7; ledNo++){
+          if(map.mapArr[r][ledNo] == 24hf00000){
+            io_led[r][ledNo] = 1;
+          }
+          else{
+            io_led[r][ledNo] = 0;
+          }
+        }
+      }
+      //for player2:
+      for(r=0; r<3; r++){
+        for(ledNo=0; ledNo<7; ledNo++){
+          if(map.mapArr[r][ledNo] == 24h000ff){
+            io_led[r][ledNo] = 1;
+          }
+          else{
+            io_led[r][ledNo] = 0;
+          }
+        }
+      }
+      
+      
+    }
+    if(testproj) {
+      //show values of the projectiles 
+      //if (PLAYER1_PROJY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
+        //if (PLAYER1_PROJY[6] == 1) io_led[0] = PLAYER1_PROJX;
+        //if (PLAYER1_PROJY[5] == 1) io_led[1] = PLAYER1_PROJX;
+        //if (PLAYER1_PROJY[4] == 1) io_led[2] = PLAYER1_PROJX;
+      //}  
+      //if (PLAYER2_PROJY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
+        //if (PLAYER2_PROJY[6] == 1) io_led[0] = PLAYER2_PROJX;
+        //if (PLAYER2_PROJY[5] == 1) io_led[1] = PLAYER2_PROJX;
+        //if (PLAYER2_PROJY[4] == 1) io_led[2] = PLAYER2_PROJX;
+      //} 
+      
+      io_led[0][7] = 0;
+      io_led[1][7] = 0;
+      io_led[2][7] = 0;
+      
+      //for projectile1:
+      for(r=0; r<3; r++){
+        for(ledNo=0; ledNo<7; ledNo++){
+          if(map.mapArr[r][ledNo] == 24h2E0854) io_led[r][ledNo] = 1;
+          else io_led[r][ledNo] = 0;
+        }
+      }
+      //for projectile2:
+      for(r=0; r<3; r++){
+        for(ledNo=0; ledNo<7; ledNo++){
+          if(map.mapArr[r][ledNo] == 24h2E0854) io_led[r][ledNo] = 1;
+          else io_led[r][ledNo] = 0;
+        }
+      }
+      
+    }
+    
+  }
+}
