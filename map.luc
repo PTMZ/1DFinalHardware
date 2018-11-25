@@ -33,20 +33,25 @@ module map (
                 if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
                 if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
 
-                //for the players:
-                if (player1Posx == x && player1Posy == y) mapArr[x][y] = COLOR_P1;
-                if (player2Posx == x && player2Posy == y) mapArr[x][y] = COLOR_P2;
-
                 //for the projectiles :
-                if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
-                if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
+                mapArr[$clog(player1Projy)][$clog(player1Projx)] = COLOR_PROJ;
+                mapArr[$clog(player2Projy)][$clog(player2Projx)] = COLOR_PROJ;
+
+                //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
+                //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
                 //add the for-loop later:
                 //for (pr : player1Proj) {
-                    //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
+                //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
                 //}
                 //for (pr : player2Proj) {
-                    //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
+                //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
                 //}
+
+                //for the players:
+                mapArr[$clog(player1Posy)][$clog(player1Posx)] = COLOR_P1;
+                mapArr[$clog(player2Posy)][$clog(player2Posx)] = COLOR_P2;
+                //if (player1Posx == x && player1Posy == y) mapArr[x][y] = COLOR_P1;
+                //if (player2Posx == x && player2Posy == y) mapArr[x][y] = COLOR_P2;
 
             }
         }
