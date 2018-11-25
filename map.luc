@@ -9,8 +9,8 @@ module map (
     input player1Projy[7],
     input player2Projx[7],
     input player2Projy[7],
-    input player2Proj,
-    input showBits[7],
+    //input player2Proj,
+    //input showBits[7],
     output mapArr[7][7][24]
 ) {
     //sig rst; //reset signal
@@ -34,8 +34,8 @@ module map (
                 if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
 
                 //for the projectiles :
-                mapArr[$clog(player1Projy)][$clog(player1Projx)] = COLOR_PROJ;
-                mapArr[$clog(player2Projy)][$clog(player2Projx)] = COLOR_PROJ;
+                mapArr[$clog2(player1Projy)][$clog2(player1Projx)] = COLOR_PROJ;
+                mapArr[$clog2(player2Projy)][$clog2(player2Projx)] = COLOR_PROJ;
 
                 //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
                 //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
@@ -48,8 +48,8 @@ module map (
                 //}
 
                 //for the players:
-                mapArr[$clog(player1Posy)][$clog(player1Posx)] = COLOR_P1;
-                mapArr[$clog(player2Posy)][$clog(player2Posx)] = COLOR_P2;
+                mapArr[$clog2(player1Posy)][$clog2(player1Posx)] = COLOR_P1;
+                mapArr[$clog2(player2Posy)][$clog2(player2Posx)] = COLOR_P2;
                 //if (player1Posx == x && player1Posy == y) mapArr[x][y] = COLOR_P1;
                 //if (player2Posx == x && player2Posy == y) mapArr[x][y] = COLOR_P2;
 
