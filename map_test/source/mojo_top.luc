@@ -24,6 +24,7 @@ module mojo_top (
     //input player2Projx[7],
     //input player2Projy[7],
     //output io_button[5],
+    input io_button [5], // 5 buttons on IO Shield
     input io_dip[3][8],
     output dataline[7]
   ) {
@@ -48,6 +49,7 @@ module mojo_top (
     reset_conditioner reset_cond;
     map map(.rst(rst));
     display display(.rst(rst));
+    player p1(.rst(rst));
   }
   
   var r, ledNo;
@@ -68,8 +70,8 @@ module mojo_top (
     testplayer = io_dip[0][0];
     testproj = io_dip[0][1];
     
-    map.player1Posx = PLAYER1_POSX;
-    map.player1Posy = PLAYER1_POSY;
+    map.player1Posx = p1.positionx;
+    map.player1Posy = p1.positiony;
     map.player2Posx = PLAYER2_POSX;
     map.player2Posy = PLAYER2_POSY;
 
@@ -77,6 +79,19 @@ module mojo_top (
     map.player1Projy = PLAYER1_PROJY;
     map.player2Projx = PLAYER2_PROJX;
     map.player2Projy = PLAYER2_PROJY;
+    
+    // proj.fireButtons = c{io_button[2], io_button[0], io_button[4], io_button[3]};
+    p1.up = io_button[3];
+    p1.down = io_button[4];
+    p1.left = io_button[0];
+    p1.right = io_button[2];
+    p1.projectileoutx = PLAYER2_PROJX;
+    p1.projectileouty = PLAYER2_PROJY;
+    p1.otherplayerx = PLAYER2_POSX;
+    p1.otherplayery = PLAYER2_POSY;
+    
+    io_led[0] = c{1b0, p1.positionx};
+    io_led[1] = c{1b0, p1.positiony};
     
     display.mapArr = map.mapArr;
     dataline = display.datalines;  
