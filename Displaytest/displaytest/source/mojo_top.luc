@@ -19,12 +19,13 @@ module mojo_top (
   ) {
   
   sig rst;                  // reset signal
+  sig mapArr[7][7][24];
   
   .clk(clk) {
     // The reset conditioner is used to synchronize the reset signal to the FPGA
     // clock. This ensures the entire FPGA comes out of reset at the same time.
     reset_conditioner reset_cond;
-    dff mapArr[7][7][24](.rst(rst));
+    // dff mapArr[7][7][24](.rst(rst));
     display display(.rst(rst));
     
   }
@@ -45,12 +46,12 @@ module mojo_top (
     
     for(i=0;i<7;i++){
       for(j=0;j<7;j++){
-        mapArr.d[i][j]=24b0;
+        mapArr[i][j]= io_dip[0][j] == 1 ? 24hFFFFFF : 24b0;
       }
     }
-    mapArr.d[0][0] = 24hFFFFFF;
+    // mapArr[0][0] = 24hFFFFFF;
     
-    display.mapArr = mapArr.q;
+    display.mapArr = mapArr;
     dataline = display.datalines;
     
   }
