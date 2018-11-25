@@ -1,16 +1,18 @@
 module player #(
-  PROJAMT = 7 : PROJAMT > 0 // Width of the output
+    PROJAMT = 7 : PROJAMT > 0 // Width of the output
   )
   
-    (
+  (
     input clk,  // clock
     input rst,  // reset
     input up,
     input down,
     input left,
     input right,
-    input projectileout,
-    input otherplayerpos[14],
+    input projectileoutx,
+    input projectileouty,
+    input otherplayerx[7],
+    input otherplayery[7],
     //output health[2], // 1-4 health
     output positionx[7], // 7bits of x 1 hot encoding
     output positiony[7], // 7bits of y 1 hot encoding
@@ -23,68 +25,72 @@ module player #(
   // instantiate i for counting
   sig i;
   
-  always {  
-  // Movement to update position
+  always {
+    // Movement to update position
     if(up){
       // Check boundary
       if ((storey.q << 1) == 7b0000000)
         storey.d = storey.q;
       // Check if other player is in same square
-      else if (c{storex.q, (storey.q << 1)} == otherplayerpos)
+      else if (c{storex.q, (storey.q << 1)} == c{otherplayerx, otherplayery})
         storey.d = storey.q;
       // Else Move
       else
         storey.d = storey.q << 1;
-      }
-   
+    }
+    
     if(down){
       // Check boundary
       if ((storey.q  >> 1) == 7b0000000)
         storey.d = storey.q;
       // Check if other player is in same square
-      else if (c{storex.q, (storey.q >> 1)} == otherplayerpos)
+      else if (c{storex.q, (storey.q >> 1)} == c{otherplayerx, otherplayery})
         storey.d = storey.q;
       // Else Move
       else
         storey.d = storey.q >> 1;
-      }
+    }
     
     if(left){
       // Check boundary
       if ((storex.q << 1) == 7b0000000)
         storex.d = storex.q;
       // Check if other player is in same square
-      else if (c{(storex.q << 1), storey.q} == otherplayerpos)
+      else if (c{(storex.q << 1), storey.q} == c{otherplayerx, otherplayery})
         storex.d = storex.q;
       // Else Move
       else
         storex.d = storex.q << 1;
-      }
+    }
     
     if(right){
       // Check boundary
       if ((storex.q >> 1) == 7b0000000)
         storex.d = storex.q;
       // Check if other player is in same square
-      else if (c{(storex.q >> 1), storey.q} == otherplayerpos)
+      else if (c{(storex.q >> 1), storey.q} == c{otherplayerx, otherplayery})
         storex.d = storex.q;
       // Else Move
       else
         storex.d = storex.q >> 1;
-      }
-      
-      //Set to update the output to be the output calculated
-      positionx = storex.q;
-      positiony = storey.q;
+    }
+    
+    //Set to update the output to be the output calculated
+    positionx = storex.q;
+    positiony = storey.q;
     
     // to check if hit for each projectile check the x and y of player coincide with projectile.
-    i = 0;
-    for (i = 0; i <= PROJAMT; i++) {
+    //    i = 0;
+    //    for (i = 0; i <= PROJAMT; i++) {
     // check each position at each index. Concatenation of both posx and posy assuming 1 health
-      if(projectileout[i] == c{storex.q, storey.q})
-        gameend = 1;
-      else
-        gameend = 0;
-      }
+    //      if(projectileout[i] == c{storex.q, storey.q})
+    //        gameend = 1;
+    //      else
+    ///        gameend = 0;
+    if (c{projectileoutx, projectileouty} == c{storex.q, storey.q})
+      gameend = 1;
+    else
+      gameend = 0;
+    
   }
 }
