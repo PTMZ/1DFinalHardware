@@ -38,12 +38,16 @@ module map (
                 if (player2Posx == x && player2Posy == y) mapArr[x][y] = COLOR_P2;
 
                 //for the projectiles :
-                for (pr : player1Proj) {
-                    mapArr[x][y] = COLOR_PROJ;
-                }
-                for (pr : player2Proj) {
-                    mapArr[x][y] = COLOR_PROJ;
-                }
+                if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
+                if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
+                //add the for-loop later:
+                //for (pr : player1Proj) {
+                    //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
+                //}
+                //for (pr : player2Proj) {
+                    //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
+                //}
+
             }
         }
     }
