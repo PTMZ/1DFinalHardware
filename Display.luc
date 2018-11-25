@@ -1,97 +1,69 @@
 
-module display(
-input clk, //clock
-input rst, //reset
-input mapArr[7][7][24],
-output datalines[7]
+module display (
+    input clk, //clock
+    input rst, //reset
+    input mapArr[7][7][24],
+    output datalines[7]
 )
 
 {
 
-const COLOR_BLACK=6h000000;
-const COLOR_RED = 6hff0000;
-const COLOR_GREEN = 6h4A7023;
-const COLOR_PURPLE= 6h2E0854;
 
-
-
-const LED_0FF=0       //000
-const LED_1=1       //001
-const LED_2=2       //010
-const LED_3=3       //011
-const LED_4=4       //100
-
-
-
-
-dff mapArr[ROW][COL][3](.clk(clk), .rst(rst)); stores the current map state like a register
+dff mapArr[7][7][24](.clk(clk), .rst(rst)); stores the current map state like a register
 dff counter[14](.clk(clk),.rst(rst)); //one complete cycle of counter corresponds to one row
-sig column_no[11]; // temporary variable to store (n % 1176), which outputs the column to be rendered
+sig column_no[11]; // temporary variable to store (n % 1536), which outputs the column to be rendered
 sig led_state[3]; //temp variable to store the state of chosen individual LED
 sig grb[24]; //temp variable to store the GRB values of LED given its led_state
 
 
 
-}
+
 
 always{
-out =7b0
+  out =7b0
 
-for(r=0;r<ROW, r++)
-   for(c=0;c<COL,c++) c{mapArr[r][c][24]} //render display
+  if(counter.q<(7*24*64)){
+
+  for(r=0; r<7; r++){
 
 
- for(r=0; r<ROW; r++){
+        led_no=counter.q/(64*24);
 
- if(counter.q<(7*24*64))
- {
- led_no=counter.q/(64*24);
+        logbit=((counter.q/64)%24)
 
- logbit=((counter.q/64)%24)>>6
+        led_state=mapArr.q[r][led_no][logbit];
 
- led_state=mapArr.q[r][logbit];
 
- case(led_state){
+      if(mapArr.q[r][led_no][logbit]==1){
 
-LED_OFF: grb= COLOR_BLACK;
-LED_1: grb= COLOR_RED;
-LED_2: grb= COLOR_BLUE;
-LED_3: grb= COLOR_PURPLE;
-LED_4 grb: COLOR_GREEN;
-
-}
+        if(counter.q%64<44){ //to encode high
+           datalines[r]=1
+            }
+        else {
+           datalines[r]=0
+             }
+        }
 
 
 
- if(mapRow[led_no][logbit]==1){
- if(counter.q%64<44) //to encode high
- {
- datalines[0]=1
- }
- else
- {
-if(counter.q%64<20){ //to encode low
-datalines[0]=0
-}
+      if(mapArr[r][led_no][logbit]==0){
 
- }
+        if(counter.q%64<20){ //to encode high
+          datalines[r]=1
+          }
+        else {
+          datalines[r]=0
+          }
+
+
+      }
 
  }
 
- column_no= counter.q-((counter.q/(64*24))*(64*24)); //gets the current column_no of 1536 and 1536 clocks corresponds to (64clocks/bit * 8bits/colour * 3colours) clocks
-
-if(grb[23-(column_no>>6)]==0){ grab the corresponding bit out of 24 (bits are retrieved left to right)
-    if(column_no[5:0]<20) datalines[r]=1; send a logic 0 by checking current clock in the cycle of the last 64 bits
-
-    }
-else{
-
-if(column_no[5:0]<40) datalines[r]=1; send a logic 1
-}
 
  }
- }
+
  counter.d= counter.q+1;
- }
- }
+
+}
 }
