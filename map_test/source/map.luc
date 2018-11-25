@@ -16,10 +16,10 @@
   
  
       const COLOR_BLACK = 24h000000;  //6 digits cuz each hexa digit represents 4 binary 
-      const COLOR_P1 = 24hf00000;     //red 
-      const COLOR_P2 = 24h000ff;      //blue 
-      const COLOR_PROJ = 24h2E0854;    //purple 
-      const COLOR_OBSTACLE = 24h4A7023;//dark green 
+      const COLOR_P1 = 24h00ff00;     //red 
+      const COLOR_P2 = 24h0000ff;      //blue 
+      const COLOR_PROJ = 24h00ffff;    //purple 2E0854
+      const COLOR_OBSTACLE = 24hff0000;//dark green 
   
  
       var x, y, pr; 
@@ -29,12 +29,6 @@
           for (x = 0; x < 7; x++) { 
               for (y = 0; y < 7; y++) { 
                   mapArr[x][y] = COLOR_BLACK; 
-  
- 
-                  //for the obstacles: 
-                  if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
-                  if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
-                  if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
   
  
                   //for the players: 
@@ -52,6 +46,11 @@
                   //for (pr : player2Proj) { 
                       //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ; 
                   //} 
+        
+                  //for the obstacles: 
+                  if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
+                  if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
+                  if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
   
  
               } 
