@@ -7,6 +7,7 @@
     <src top="true">mojo_top.luc</src>
     <src>player.luc</src>
     <ucf>display.ucf</ucf>
+    <ucf>button_movements.ucf</ucf>
     <ucf lib="true">mojo.ucf</ucf>
     <ucf lib="true">io_shield.ucf</ucf>
     <component>pipeline.luc</component>

@@ -26,7 +26,7 @@ module display (
           //if (ledNo == 2) out[r] = 0;
         }
         else {
-          if (foo[5:0] < 40) datalines[r] = 1; //corresponds to Th of logic bit 1
+          if (foo[5:0] < 44) datalines[r] = 1; //corresponds to Th of logic bit 1
           //if (ledNo == 2) out[r] = 0;
           //leaving only this line behind changes first three to green, rest to purplish white no gradient
         }

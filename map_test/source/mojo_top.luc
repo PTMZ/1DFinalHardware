@@ -24,8 +24,27 @@ module mojo_top (
     //input player2Projx[7],
     //input player2Projy[7],
     //output io_button[5],
-    input io_button [5], // 5 buttons on IO Shield
+    //input io_button [5], // 5 buttons on IO Shield
     input io_dip[3][8],
+    
+    input firebuttonUpPlayer1,
+    input firebuttonDownPlayer1,
+    input firebuttonLeftPlayer1,
+    input firebuttonRightPlayer1,
+    input movebuttonUpPlayer1,
+    input movebuttonDownPlayer1,
+    input movebuttonLeftPlayer1,
+    input movebuttonRightPlayer1,
+ 
+    
+    input firebuttonUpPlayer2,
+    input firebuttonDownPlayer2,
+    input firebuttonLeftPlayer2,
+    input firebuttonRightPlayer2,
+    input movebuttonUpPlayer2,
+    input movebuttonDownPlayer2,
+    input movebuttonLeftPlayer2,
+    input movebuttonRightPlayer2,
     output dataline[7]
   ) {
   
@@ -38,10 +57,10 @@ module mojo_top (
   const PLAYER1_POSY = 7b0100000;
   const PLAYER2_POSX = 7b0000001;
   const PLAYER2_POSY = 7b0000010;
-  const PLAYER1_PROJX = 7b0000001;
-  const PLAYER1_PROJY = 7b0000001;
-  const PLAYER2_PROJX = 7b0000010;
-  const PLAYER2_PROJY = 7b00000001;
+  const PLAYER1_PROJX = 7b1000000;
+  const PLAYER1_PROJY = 7b1000000;
+  const PLAYER2_PROJX = 7b1000000;
+  const PLAYER2_PROJY = 7b1000000;
   
   .clk(clk) {
     // The reset conditioner is used to synchronize the reset signal to the FPGA
@@ -81,21 +100,28 @@ module mojo_top (
     map.player2Projy = PLAYER2_PROJY;
     
     // proj.fireButtons = c{io_button[2], io_button[0], io_button[4], io_button[3]};
-    p1.up = io_button[3];
-    p1.down = io_button[4];
-    p1.left = io_button[0];
-    p1.right = io_button[2];
+    
+    p1.up=movebuttonUpPlayer1;
+    p1.down=movebuttonDownPlayer1;
+    p1.left=movebuttonLeftPlayer1;
+    p1.right=movebuttonRightPlayer1;
+    
+    //p1.up = io_button[3];
+    //p1.down = io_button[4];
+    //p1.left = io_button[0];
+    //p1.right = io_button[2];
     p1.projectileoutx = PLAYER2_PROJX;
     p1.projectileouty = PLAYER2_PROJY;
     p1.otherplayerx = PLAYER2_POSX;
     p1.otherplayery = PLAYER2_POSY;
     
-    io_led[0] = c{1b0, p1.positionx};
-    io_led[1] = c{1b0, p1.positiony};
+    //io_led[0] = c{1b0, p1.positionx};
+    //io_led[1] = c{1b0, p1.positiony};
     
     display.mapArr = map.mapArr;
     dataline = display.datalines;  
     
+    /*
     if(testplayer) {
       //show values of the players  
       //if (PLAYER1_POSY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
@@ -110,9 +136,9 @@ module mojo_top (
       //}
       
      
-      io_led[0][7] = 0;
-      io_led[1][7] = 0;
-      io_led[2][7] = 0;
+      //io_led[0][7] = 0;
+      //io_led[1][7] = 0;
+      //io_led[2][7] = 0;
       
       //for player1:
       for(r=0; r<3; r++){
@@ -126,7 +152,7 @@ module mojo_top (
         }
       }
       //for player2:
-      /*
+      
       for(r=0; r<3; r++){
         for(ledNo=0; ledNo<7; ledNo++){
           if(map.mapArr[r][ledNo] == 24h000ff){
@@ -137,7 +163,7 @@ module mojo_top (
           }
         }
       }
-      */
+      
       
     }
     else if(testproj) {
@@ -153,9 +179,9 @@ module mojo_top (
         //if (PLAYER2_PROJY[4] == 1) io_led[2] = PLAYER2_PROJX;
       //} 
       
-      io_led[0][7] = 0;
-      io_led[1][7] = 0;
-      io_led[2][7] = 0;
+      //io_led[0][7] = 0;
+      //io_led[1][7] = 0;
+      //io_led[2][7] = 0;
       
       //for projectile1:
       for(r=0; r<3; r++){
@@ -173,6 +199,7 @@ module mojo_top (
       }
       
     }
+    */
     
   }
 }

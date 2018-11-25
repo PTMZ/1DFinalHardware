@@ -18,8 +18,8 @@ module map (
     const COLOR_BLACK = 24h000000;   //6 digits cuz each hexa digit represents 4 binary
     const COLOR_P1 = 24h00ff00;      //red
     const COLOR_P2 = 24h0000ff;      //blue
-    const COLOR_PROJ = 24h00ffff;    //purple
-    const COLOR_OBSTACLE = 24hff0000;//dark green
+    const COLOR_PROJ = 24hff0000;    //purple
+    const COLOR_OBSTACLE = 24h00ffff;//dark green
 
     var x, y, pr;
 
@@ -32,8 +32,6 @@ module map (
                 //mapArr[$clog2(player1Projy)][$clog2(player1Projx)] = COLOR_PROJ;
                 //mapArr[$clog2(player2Projy)][$clog2(player2Projx)] = COLOR_PROJ;
 
-                if (player1Projx == 1 << x && player1Projy == 1 << y) mapArr[x][y] = COLOR_PROJ;
-                if (player2Projx == 1 << x && player2Projy == 1 << y) mapArr[x][y] = COLOR_PROJ;
                 //add the for-loop later:
                 //for (pr : player1Proj) {
                 //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
@@ -46,12 +44,18 @@ module map (
                 //mapArr[$clog2(player1Posy)][$clog2(player1Posx)] = COLOR_P1;
                 //mapArr[$clog2(player2Posy)][$clog2(player2Posx)] = COLOR_P2;
                 if (player1Posx == 1 << x && player1Posy == 1 << y) mapArr[x][y] = COLOR_P1;
-                if (player2Posx == 1 << x && player2Posy == 1 << y) mapArr[x][y] = COLOR_P2;
+                else if (player2Posx == 1 << x && player2Posy == 1 << y) mapArr[x][y] = COLOR_P2;
         
                 //for the obstacles:
-                if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
-                if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
-                if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                else if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                else if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                else if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                else if (x == 1 && (y == 2 || y == 4 || y == 6)) mapArr[x][y] = COLOR_OBSTACLE;
+        
+                else if (player1Projx == (1 << x) && player1Projy == (1 << y)) mapArr[x][y] = COLOR_PROJ;
+                else if (player2Projx == (1 << x) && player2Projy == (1 << y)) mapArr[x][y] = COLOR_PROJ;
+                
+        
 
             }
         }
