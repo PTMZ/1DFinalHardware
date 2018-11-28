@@ -1,5 +1,7 @@
 module player #(
-    PROJAMT = 7 : PROJAMT > 0 // Width of the output
+    PROJAMT = 7 : PROJAMT > 0, // Width of the output
+    STARTX = 7b1000000,
+    STARTY = 7b1000000
   )
   
   (
@@ -63,10 +65,19 @@ module player #(
     edLeft.in = bcLeft.out;
     edRight.in = bcRight.out;
     
+    // Set the initial position
+    storex.d = STARTX;
+    storey.d = STARTY;
+    
+    // Create variable name oldx, oldy 
     oldx = storex.q;
     oldy = storey.q;
+    
+    // Create variable name newx, newy that is used to check for conditions 
     newx = 0;
     newy = 0;
+    
+    // convert the value to dec
     newpositionxdec.value = newx;
     newpositionydec.value = newy;
     
