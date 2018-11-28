@@ -1,7 +1,7 @@
 module player #(
     PROJAMT = 7 : PROJAMT > 0, // Width of the output
-    STARTX = 7b1000000,
-    STARTY = 7b1000000
+    STARTX = 7b0000001,
+    STARTY = 7b0000001
   )
   
   (
@@ -34,8 +34,8 @@ module player #(
     button_conditioner bcRight; // button input conditioner
     customCounter counter(.rst(rst));
     
-    dff storex[7](#INIT(7b0000001), .rst(rst));
-    dff storey[7](#INIT(7b0000001), .rst(rst));
+    dff storex[7](#INIT(STARTX), .rst(rst));
+    dff storey[7](#INIT(STARTY), .rst(rst));
     // dff cooldown[22];
   }
   // instantiate i for counting
@@ -64,10 +64,6 @@ module player #(
     edDown.in = bcDown.out;
     edLeft.in = bcLeft.out;
     edRight.in = bcRight.out;
-    
-    // Set the initial position
-    storex.d = STARTX;
-    storey.d = STARTY;
     
     // Create variable name oldx, oldy 
     oldx = storex.q;
