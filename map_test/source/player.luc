@@ -13,6 +13,7 @@ module player #(
     input projectileouty[7],
     input otherplayerx[7],
     input otherplayery[7],
+    input obstacles[7][7],
     //output health[2], // 1-4 health
     output positionx[7], // 7bits of x 1 hot encoding
     output positiony[7], // 7bits of y 1 hot encoding
@@ -31,13 +32,22 @@ module player #(
     button_conditioner bcRight; // button input conditioner
     customCounter counter(.rst(rst));
     
-  dff storex[7](#INIT(7b0000001), .rst(rst));
-  dff storey[7](#INIT(7b0000001), .rst(rst));
-  
-  // dff cooldown[22];
+    dff storex[7](#INIT(7b0000001), .rst(rst));
+    dff storey[7](#INIT(7b0000001), .rst(rst));
+    // dff cooldown[22];
   }
   // instantiate i for counting
   //sig i;
+  
+  
+  sig oldx[7];
+  sig oldy[7];
+  sig newx[7];
+  sig newy[7];
+  
+  // to convert to x and y dec
+  digit_lut newpositionxdec;
+  digit_lut newpositionydec;
   
   always {
     counter.amount = 50000000;
@@ -53,60 +63,84 @@ module player #(
     edLeft.in = bcLeft.out;
     edRight.in = bcRight.out;
     
+    oldx = storex.q;
+    oldy = storey.q;
+    newx = 0;
+    newy = 0;
+    newpositionxdec.value = newx;
+    newpositionydec.value = newy;
+    
+    
     if (counter.ans == 1){
       // Movement to update position
       if(edUp.out){
+        newy = storey.q << 1;
         // Check boundary
-        if ((storey.q << 1) == 7b0000000)
-          storey.d = storey.q;
+        if ((newy) == 7b0000000)
+          storey.d = oldy;
         // Check if other player is in same square
-        else if (c{storex.q, (storey.q << 1)} == c{otherplayerx, otherplayery})
-          storey.d = storey.q;
+        else if (c{oldx, newy} == c{otherplayerx, otherplayery})
+          storey.d = oldy;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (obstacles[newpositionxdec.dec][newpositionydec.dec] == 1)
+          storey.d = oldy;
         // Else Move
         else
-          storey.d = storey.q << 1;
+          storey.d = newy;
         
         counter.resetCd = 1;
       }
       
       if(edDown.out){
+        newy = storey.q >> 1;
         // Check boundary
-        if ((storey.q  >> 1) == 7b0000000)
-          storey.d = storey.q;
+        if ((newy) == 7b0000000)
+          storey.d = oldy;
         // Check if other player is in same square
-        else if (c{storex.q, (storey.q >> 1)} == c{otherplayerx, otherplayery})
-          storey.d = storey.q;
+        else if (c{oldx, newy} == c{otherplayerx, otherplayery})
+          storey.d = oldy;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (obstacles[newpositionxdec.dec][newpositionydec.dec] == 1)
+          storey.d = oldy;
         // Else Move
         else
-          storey.d = storey.q >> 1;
+          storey.d = newy;
         
         counter.resetCd = 1;
       }
       
       if(edLeft.out){
+        newx = storex.q << 1;
         // Check boundary
-        if ((storex.q << 1) == 7b0000000)
-          storex.d = storex.q;
+        if ((newx) == 7b0000000)
+          storex.d = newx;
         // Check if other player is in same square
-        else if (c{(storex.q << 1), storey.q} == c{otherplayerx, otherplayery})
-          storex.d = storex.q;
+        else if (c{newx, oldy} == c{otherplayerx, otherplayery})
+          storex.d = oldx;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (obstacles[newpositionxdec.dec][newpositionydec.dec] == 1)
+          storey.d = oldx;
         // Else Move
         else
-          storex.d = storex.q << 1;
+          storex.d = newx;
         
         counter.resetCd = 1;
       }
       
       if(edRight.out){
+        newx = storex.q >> 1;
         // Check boundary
-        if ((storex.q >> 1) == 7b0000000)
-          storex.d = storex.q;
+        if ((newx) == 7b0000000)
+          storex.d = oldx;
         // Check if other player is in same square
-        else if (c{(storex.q >> 1), storey.q} == c{otherplayerx, otherplayery})
-          storex.d = storex.q;
+        else if (c{newx, storey.q} == c{otherplayerx, otherplayery})
+          storex.d = oldx;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (obstacles[newpositionxdec.dec][newpositionydec.dec] == 1)
+          storey.d = oldx;
         // Else Move
         else
-          storex.d = storex.q >> 1;
+          storex.d = newx;
         
         counter.resetCd = 1;
       }
@@ -114,6 +148,7 @@ module player #(
     // Set to update the output to be the output calculated
     positionx = storex.q;
     positiony = storey.q;
+    
     
     // checkcooldown
     // cooldown.d = cooldown.q-1 >= 0 ? cooldown.q-1 : 0;
@@ -125,6 +160,7 @@ module player #(
     //        gameend = 1;
     //      else
     ///        gameend = 0;
+    
     if (c{projectileoutx, projectileouty} == c{storex.q, storey.q})
       gameend = 1;
     else
