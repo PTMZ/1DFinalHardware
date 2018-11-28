@@ -8,29 +8,96 @@ module display (
   
   {
   
-  dff counter[21](.clk(clk), .rst(rst)); //why is counter 21?
-  sig foo[11];
+  dff counter[23](.clk(clk), .rst(rst)); //why is counter 21?
+  sig foo[13];
   sig ledNo[3];
   var r;
-
+  
   always {
     counter.d = counter.q + 1;
-    datalines = 0;
+    datalines = 7b0;
     
-   for (r=0; r<7; r++) {
-      if (counter.q < 64*24*7) {   //first 1536*8 clocks reserved for LED signal
-        ledNo = counter.q / (64*24);    
-        foo = counter.q - ((counter.q/(64*24))*(64*24)); //what is foo for? foo = counter.q % (64*24)
-        if (mapArr[r][ledNo][23-(foo>>6)] == 0) { //if grb[23-(foo SHR6bits)]? //within 64 clock cycles
-          if (foo[5:0] < 20) datalines[r] = 1; //corresponds to Th of logic bit 0 
-          //if (ledNo == 2) out[r] = 0;
-        }
-        else {
-          if (foo[5:0] < 44) datalines[r] = 1; //corresponds to Th of logic bit 1
-          //if (ledNo == 2) out[r] = 0;
-          //leaving only this line behind changes first three to green, rest to purplish white no gradient
-        }
+    if (counter.q < 64*24*7) {
+      ledNo = counter.q / (64*24);
+      foo = counter.q - ((counter.q/(64*24))*(64*24));
+      
+      /*
+      if (mapArr[0][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[0] = 1; //corresponds to Th of logic bit 0
       }
-   }
+      else {
+        if (foo[5:0] < 40) datalines[0] = 1; //corresponds to Th of logic bit 1
+      }
+      */
+      
+      if (mapArr[1][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[1] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[1] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (mapArr[2][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[2] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[2] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (mapArr[3][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[3] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[3] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (mapArr[4][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[4] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[4] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (mapArr[5][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[5] = 1; //corresponds to Th of logic bit 0
+        else datalines[5] = 0;
+      }
+      else {
+        if (foo[5:0] < 40) datalines[5] = 1; //corresponds to Th of logic bit 1
+        else datalines[5] = 0;
+      }
+      
+      /*
+      if (mapArr[6][ledNo][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[6] = 1; //corresponds to Th of logic bit 0
+        else datalines[6] = 0;
+      }
+      else {
+        if (foo[5:0] < 40) datalines[6] = 1; //corresponds to Th of logic bit 1
+        else datalines[6] = 0;
+      }
+      */
+      
+    }
+    
+    /*
+       for (r=0; r<3; r++) {
+       if (counter.q < 64*24*7) {
+       ledNo = counter.q / (64*24);
+       foo = counter.q - ((counter.q/(64*24))*(64*24));
+       if (mapArr[r][ledNo][23-(foo>>6)] == 0) {
+       if (foo[5:0] < 20) datalines[r] = 1; //corresponds to Th of logic bit 0
+       }
+       else {
+       if (foo[5:0] < 44) datalines[r] = 1; //corresponds to Th of logic bit 1
+       //if (ledNo == 2) out[r] = 0;
+       //leaving only this line behind changes first three to green, rest to purplish white no gradient
+       }
+       }
+       }
+    */
+    
+    
+    
   }
 }

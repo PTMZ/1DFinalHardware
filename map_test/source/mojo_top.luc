@@ -11,40 +11,25 @@ module mojo_top (
     input avr_tx,           // AVR TX (FPGA RX)
     output avr_rx,          // AVR RX (FPGA TX)
     input avr_rx_busy,       // AVR RX buffer full
-    output io_led[3][8], 
-    output io_seg[8], 
-    output io_sel[4], 
-    //input mapArr[7][7][24],
-    //input player1Posx[7],
-    //input player1Posy[7],
-    //input player2Posx[7],
-    //input player2Posy[7],
-    //input player1Projx[7],
-    //input player1Projy[7],
-    //input player2Projx[7],
-    //input player2Projy[7],
-    //output io_button[5],
-    //input io_button [5], // 5 buttons on IO Shield
-    input io_dip[3][8],
     
-    input firebuttonUpPlayer1,
-    input firebuttonDownPlayer1,
-    input firebuttonLeftPlayer1,
-    input firebuttonRightPlayer1,
-    input movebuttonUpPlayer1,
-    input movebuttonDownPlayer1,
-    input movebuttonLeftPlayer1,
-    input movebuttonRightPlayer1,
+    input p1moveUp,
+    input p1moveDown,
+    input p1moveLeft,
+    input p1moveRight,
+    input p1fireUp,
+    input p1fireDown,
+    input p1fireLeft,
+    input p1fireRight,
  
     
-    input firebuttonUpPlayer2,
-    input firebuttonDownPlayer2,
-    input firebuttonLeftPlayer2,
-    input firebuttonRightPlayer2,
-    input movebuttonUpPlayer2,
-    input movebuttonDownPlayer2,
-    input movebuttonLeftPlayer2,
-    input movebuttonRightPlayer2,
+    input p2moveUp,
+    input p2moveDown,
+    input p2moveLeft,
+    input p2moveRight,
+    input p2fireUp,
+    input p2fireDown,
+    input p2fireLeft,
+    input p2fireRight,
     output dataline[7]
   ) {
   
@@ -54,9 +39,9 @@ module mojo_top (
   
   //constants:
   const PLAYER1_POSX = 7b0000010;
-  const PLAYER1_POSY = 7b0100000;
-  const PLAYER2_POSX = 7b0000001;
-  const PLAYER2_POSY = 7b0000010;
+  const PLAYER1_POSY = 7b0000010;
+  const PLAYER2_POSX = 7b0100000;
+  const PLAYER2_POSY = 7b0100000;
   const PLAYER1_PROJX = 7b1000000;
   const PLAYER1_PROJY = 7b1000000;
   const PLAYER2_PROJX = 7b1000000;
@@ -68,138 +53,110 @@ module mojo_top (
     reset_conditioner reset_cond;
     map map(.rst(rst));
     display display(.rst(rst));
-    player p1(.rst(rst));
+    player p1(.rst(rst), #STARTX(PLAYER1_POSX), #STARTY(PLAYER1_POSY));
+    player p2(.rst(rst), #STARTX(PLAYER2_POSX), #STARTY(PLAYER2_POSY));
+    projectiles proj1(.rst(rst));
+    projectiles proj2(.rst(rst));
+    obstacles obs(.rst(rst));
+    //ws2812b ws2812b[7](.rst(rst));
   }
   
-  var r, ledNo;
+  sig mapTemp[7][7][24];
+  sig mapTemp2[7][7][24];
+  var x,y;
   
   always {
     reset_cond.in = ~rst_n; // input raw inverted reset signal
     rst = reset_cond.out;   // conditioned reset
     
     led = 8h00;             // turn LEDs off
+    led[0] = proj1.cd;
     spi_miso = bz;          // not using SPI
     spi_channel = bzzzz;    // not using flags
     avr_rx = bz;            // not using serial port
     
-    io_led = 3x{{8h00}};  //turn LED off
-    io_seg = 8hff;  //turn segments off
-    io_sel = 4hf;  //select no digits
-    
-    testplayer = io_dip[0][0];
-    testproj = io_dip[0][1];
-    
     map.player1Posx = p1.positionx;
     map.player1Posy = p1.positiony;
-    map.player2Posx = PLAYER2_POSX;
-    map.player2Posy = PLAYER2_POSY;
+    map.player2Posx = p2.positionx;
+    map.player2Posy = p2.positiony;
 
-    map.player1Projx = PLAYER1_PROJX;
-    map.player1Projy = PLAYER1_PROJY;
-    map.player2Projx = PLAYER2_PROJX;
-    map.player2Projy = PLAYER2_PROJY;
+    map.player1Projx = proj1.positionx;
+    map.player1Projy = proj1.positiony;
+    map.player2Projx = proj2.positionx;
+    map.player2Projy = proj2.positiony;
     
-    // proj.fireButtons = c{io_button[2], io_button[0], io_button[4], io_button[3]};
+    map.obstacle = obs.obstacle;
     
-    p1.up=movebuttonUpPlayer1;
-    p1.down=movebuttonDownPlayer1;
-    p1.left=movebuttonLeftPlayer1;
-    p1.right=movebuttonRightPlayer1;
     
-    //p1.up = io_button[3];
-    //p1.down = io_button[4];
-    //p1.left = io_button[0];
-    //p1.right = io_button[2];
+    p1.up=p1moveUp;
+    p1.down=p1moveDown;
+    p1.left=p1moveLeft;
+    p1.right=p1moveRight;
+    
     p1.projectileoutx = PLAYER2_PROJX;
     p1.projectileouty = PLAYER2_PROJY;
-    p1.otherplayerx = PLAYER2_POSX;
-    p1.otherplayery = PLAYER2_POSY;
+    p1.otherplayerx = p2.positionx;
+    p1.otherplayery = p2.positiony;
+    p1.obstacles = obs.obstacle;
     
-    //io_led[0] = c{1b0, p1.positionx};
-    //io_led[1] = c{1b0, p1.positiony};
+    p2.up=p2moveUp;
+    p2.down=p2moveDown;
+    p2.left=p2moveLeft;
+    p2.right=p2moveRight;
     
-    display.mapArr = map.mapArr;
-    dataline = display.datalines;  
+    p2.projectileoutx = PLAYER1_PROJX;
+    p2.projectileouty = PLAYER1_PROJY;
+    p2.otherplayerx = p1.positionx;
+    p2.otherplayery = p1.positiony;
+    p2.obstacles = obs.obstacle;
+    
+    proj1.playerX = p1.positionx;
+    proj1.playerY = p1.positiony;
+    proj1.up = p1fireUp;
+    proj1.down = p1fireDown;
+    proj1.left = p1fireLeft;
+    proj1.right = p1fireRight;
+    
+    proj2.playerX = p2.positionx;
+    proj2.playerY = p2.positiony;
+    proj2.up = p2fireUp;
+    proj2.down = p2fireDown;
+    proj2.left = p2fireLeft;
+    proj2.right = p2fireRight;
     
     /*
-    if(testplayer) {
-      //show values of the players  
-      //if (PLAYER1_POSY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
-        //if (PLAYER1_POSY[6] == 1) io_led[0] = PLAYER1_POSX;
-        //if (PLAYER1_POSY[5] == 1) io_led[1] = PLAYER1_POSX;
-        //if (PLAYER1_POSY[4] == 1) io_led[2] = PLAYER1_POSX;
-      //}  
-      //if (PLAYER2_POSY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
-        //if (PLAYER2_POSY[6] == 1) io_led[0] = PLAYER2_POSX;
-        //if (PLAYER2_POSY[5] == 1) io_led[1] = PLAYER2_POSX;
-        //if (PLAYER2_POSY[4] == 1) io_led[2] = PLAYER2_POSX;
-      //}
-      
-     
-      //io_led[0][7] = 0;
-      //io_led[1][7] = 0;
-      //io_led[2][7] = 0;
-      
-      //for player1:
-      for(r=0; r<3; r++){
-        for(ledNo=0; ledNo<7; ledNo++){
-          if(map.mapArr[r][ledNo] == 24hf00000){
-            io_led[r][ledNo] = 1;
-          }
-          else{
-            io_led[r][ledNo] = 0;
-          }
-        }
+    for(x=0; x<7; x++){
+    for(y=0; y<7; y++){
+        mapTemp[x][y] = 24h000000;
+        mapTemp2[x][y] = 24h000000;
       }
-      //for player2:
-      
-      for(r=0; r<3; r++){
-        for(ledNo=0; ledNo<7; ledNo++){
-          if(map.mapArr[r][ledNo] == 24h000ff){
-            io_led[r][ledNo] = 1;
-          }
-          else{
-            io_led[r][ledNo] = 0;
-          }
-        }
-      }
-      
-      
-    }
-    else if(testproj) {
-      //show values of the projectiles 
-      //if (PLAYER1_PROJY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
-        //if (PLAYER1_PROJY[6] == 1) io_led[0] = PLAYER1_PROJX;
-        //if (PLAYER1_PROJY[5] == 1) io_led[1] = PLAYER1_PROJX;
-        //if (PLAYER1_PROJY[4] == 1) io_led[2] = PLAYER1_PROJX;
-      //}  
-      //if (PLAYER2_PROJY[3:0] == 4b0) {  //(only the first 3 rows will be displayed as part of the 3 segments of LED on the Mojo) 
-        //if (PLAYER2_PROJY[6] == 1) io_led[0] = PLAYER2_PROJX;
-        //if (PLAYER2_PROJY[5] == 1) io_led[1] = PLAYER2_PROJX;
-        //if (PLAYER2_PROJY[4] == 1) io_led[2] = PLAYER2_PROJX;
-      //} 
-      
-      //io_led[0][7] = 0;
-      //io_led[1][7] = 0;
-      //io_led[2][7] = 0;
-      
-      //for projectile1:
-      for(r=0; r<3; r++){
-        for(ledNo=0; ledNo<7; ledNo++){
-          if(map.mapArr[r][ledNo] == 24h2E0854) io_led[r][ledNo] = 1;
-          else io_led[r][ledNo] = 0;
-        }
-      }
-      //for projectile2:
-      for(r=0; r<3; r++){
-        for(ledNo=0; ledNo<7; ledNo++){
-          if(map.mapArr[r][ledNo] == 24h2E0854) io_led[r][ledNo] = 1;
-          else io_led[r][ledNo] = 0;
-        }
-      }
-      
     }
     */
+    //mapTemp[1][1] = 24h00ffff;
+    //mapTemp[1][3] = 24h00ffff;
+    //mapTemp[1][5] = 24h00ffff;
+    //mapTemp[3][1] = 24h00ffff;
+    //mapTemp[3][3] = 24h00ffff;
+    
+    //mapTemp[3][0] = 24h00ff00;
+    
+    //display.mapArr = mapTemp;
+    display.mapArr = map.mapArr;
+    dataline = display.datalines;
+    
+    /*
+    ws2812b.update = 7b1111111;
+    ws2812b.color = map.mapArr;
+    dataline[0] = ws2812b.led[0];
+    dataline[1] = 0;
+    dataline[2] = 0;
+    dataline[3] = 0;
+    dataline[4] = 0;
+    dataline[5] = 0;
+    dataline[6] = 0;
+    */
+    
+    
     
   }
 }

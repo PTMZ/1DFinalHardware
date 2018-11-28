@@ -1,0 +1,14 @@
+NET "dataline[0]" LOC = P97;
+NET "dataline[0]" IOSTANDARD = LVTTL;
+NET "dataline[1]" LOC = P98;
+NET "dataline[1]" IOSTANDARD = LVTTL;
+NET "dataline[2]" LOC = P94;
+NET "dataline[2]" IOSTANDARD = LVTTL;
+NET "dataline[3]" LOC = P95;
+NET "dataline[3]" IOSTANDARD = LVTTL;
+NET "dataline[4]" LOC = P92;
+NET "dataline[4]" IOSTANDARD = LVTTL;
+NET "dataline[5]" LOC = P93;
+NET "dataline[5]" IOSTANDARD = LVTTL;
+NET "dataline[6]" LOC = P87;
+NET "dataline[6]" IOSTANDARD = LVTTL;

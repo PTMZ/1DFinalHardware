@@ -11,8 +11,8 @@ module player #(
     input down,
     input left,
     input right,
-    input projectileoutx[PROJAMT][7],
-    input projectileouty[PROJAMT][7],
+    input projectileoutx[7],
+    input projectileouty[7],
     input otherplayerx[7],
     input otherplayery[7],
     input obstacles[7][7],
@@ -39,7 +39,7 @@ module player #(
     // dff cooldown[22];
   }
   // instantiate i for counting
-  var i;
+  //sig i;
   
   
   sig oldx[7];
@@ -52,7 +52,7 @@ module player #(
   digit_lut newpositionydec;
   
   always {
-    counter.amount = 50000000;
+    counter.amount = 20000000;
     counter.resetCd = 0;
     
     bcUp.in = up;
@@ -65,11 +65,11 @@ module player #(
     edLeft.in = bcLeft.out;
     edRight.in = bcRight.out;
     
-    // Create variable name oldx, oldy
+    // Create variable name oldx, oldy 
     oldx = storex.q;
     oldy = storey.q;
     
-    // Create variable name newx, newy that is used to check for conditions
+    // Create variable name newx, newy that is used to check for conditions 
     newx = 0;
     newy = 0;
     
@@ -167,11 +167,11 @@ module player #(
     //        gameend = 1;
     //      else
     ///        gameend = 0;
-    for (i = 0; i < 7; i++) {
-      if (c{projectileoutx[i], projectileouty[i]} == c{storex.q, storey.q})
-        gameend = 1;
-      else
-        gameend = 0;
-    }
-}
+    
+    if (c{projectileoutx, projectileouty} == c{storex.q, storey.q})
+      gameend = 1;
+    else
+      gameend = 0;
+    
+  }
 }
