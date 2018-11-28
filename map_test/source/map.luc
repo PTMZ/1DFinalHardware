@@ -48,12 +48,14 @@
                   //} 
         
                   //for the obstacles: 
-                  if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
-                  if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
-                  if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE; 
-  
+                  //if (x == 1 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                  //if (x == 3 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                  //if (x == 5 && (y == 1 || y == 3 || y == 5)) mapArr[x][y] = COLOR_OBSTACLE;
+                  //obstacles.obstacle =
+                  if (obstacles.obstacle[x][y] == 1) mapArr[x][y] = COLOR_OBSTACLE;
  
               } 
-          } 
+          }
+
       } 
 } 

@@ -1,0 +1,16 @@
+module obstacles (
+input clk,
+input rst,
+output obstacle[7][7]
+) {
+
+always {
+    obstacle[6] = 7b0000000;
+    obstacle[5] = 7b0010100;
+    obstacle[4] = 7b0000000;
+    obstacle[3] = 7b0001000;
+    obstacle[2] = 7b0000000;
+    obstacle[1] = 7b0010100;
+    obstacle[0] = 7b0000000;
+    }
+}
