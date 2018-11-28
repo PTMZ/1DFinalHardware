@@ -113,7 +113,7 @@ module player #(
         newx = storex.q << 1;
         // Check boundary
         if ((newx) == 7b0000000)
-          storex.d = newx;
+          storex.d = oldx;
         // Check if other player is in same square
         else if (c{newx, oldy} == c{otherplayerx, otherplayery})
           storex.d = oldx;

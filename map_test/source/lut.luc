@@ -1,0 +1,19 @@
+module digit_lut (
+    input value [7],
+    output dec [3]
+  ) {
+  always {
+    case (value) {
+      7b0000000: dec = 3d7;
+      7b0000001: dec = 3d0;
+      7b0000010: dec = 3d1;
+      7b0000100: dec = 3d2;
+      7b0001000: dec = 3d3;
+      7b0010000: dec = 3d4;
+      7b0100000: dec = 3d5;
+      7b1000000: dec = 3d6;
+      
+      default: dec = 3d0;
+    }
+  }
+}
