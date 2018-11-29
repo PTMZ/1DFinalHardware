@@ -1,76 +1,49 @@
 module map (
     input clk,
     input rst,
-    input player1Posx[7],
-    input player1Posy[7],
-    input player2Posx[7],
-    input player2Posy[7],
-    input player1Projx[4][7],
-    input player1Projy[4][7],
-    input player2Projx[4][7],
-    input player2Projy[4][7],
-    input obstacle[7][7],
+    input player1Posx[3],
+    input player1Posy[3],
+    input player2Posx[3],
+    input player2Posy[3],
+    input player1Projx[4][3],
+    input player1Projy[4][3],
+    input player2Projx[4][3],
+    input player2Projy[4][3],
+    input obstacle[7][7][3],
     //input player2Proj,
    // input showBits[7],
-    output mapArr[7][7][24]
+    output mapArr[7][7][3]
 ) {
     //sig rst; //reset signal
 
-    const COLOR_BLACK = 24h000000;   //6 digits cuz each hexa digit represents 4 binary
-    const COLOR_P1 = 24h00ff00;      //red
-    sig mapTemp[7][7][24];
-    const COLOR_P2 = 24h0000ff;      //blue
-    const COLOR_PROJ = 24h00ffff;    //purple
-    const COLOR_OBSTACLE = 24hff0000;//dark green
+    //const COLOR_BLACK = 24h000000;   //6 digits cuz each hexa digit represents 4 binary
+    //const COLOR_P1 = 24h00ff00;      //red
+    //sig mapTemp[7][7][24];
+    //const COLOR_P2 = 24h0000ff;      //blue
+    //const COLOR_PROJ = 24h00ffff;    //purple
+    //const COLOR_OBSTACLE = 24hff0000;//dark green
 
-    var x, y, pr;
+    sig mapTemp[7][7][3];
+
+    const NONE = 3b000;
+    const PLAYER1 = 3b001;
+    const PLAYER2 = 3b010;
+    const OBSTACLE = 3b011;
+    const PROJECTILE = 3b100;
+
+    //var x, y, pr;
+    var i;
 
     always {
-        for (x = 0; x < 7; x++) {
-            for (y = 0; y < 7; y++) {
-                mapTemp[x][y] = COLOR_BLACK;
 
-                //for the projectiles :
-                //mapArr[$clog2(player1Projy)][$clog2(player1Projx)] = COLOR_PROJ;
-                //mapArr[$clog2(player2Projy)][$clog2(player2Projx)] = COLOR_PROJ;
+        mapArr = obstacle;
 
-                //add the for-loop later:
-                //for (pr : player1Proj) {
-                //if (player1Projx == x && player1Projy == y) mapArr[x][y] = COLOR_PROJ;
-                //}
-                //for (pr : player2Proj) {
-                //if (player2Projx == x && player2Projy == y) mapArr[x][y] = COLOR_PROJ;
-                //}
-
-                //for the players:
-                if (player1Posx == 1 << x && player1Posy == 1 << y) mapTemp[x][y] = COLOR_P1;
-                else if (player2Posx == 1 << x && player2Posy == 1 << y) mapTemp[x][y] = COLOR_P2;
-                else if (obstacle[x][y] == 1) mapTemp[x][y] = COLOR_OBSTACLE;
-                //if(x == 3 && y == 0) mapTemp[x][y] = COLOR_P1;
-                //else if (player2Posx == 1 << x && player2Posy == 1 << y) mapArr[x][y] = COLOR_P2;
-        
-                //for the obstacles:
-                //else if (x == 1 && (y == 1 || y == 3 || y == 5)) mapTemp[x][y] = COLOR_OBSTACLE;
-                //else if (x == 3 && (y == 1 || y == 3 || y == 5)) mapTemp[x][y] = COLOR_OBSTACLE;
-                //else if (x == 5 && (y == 1 || y == 3 || y == 5)) mapTemp[x][y] = COLOR_OBSTACLE;
-                //else if (x == 1 && (y == 2 || y == 4 || y == 6)) mapArr[x][y] = COLOR_OBSTACLE;
-        
-                else if (player1Projx[0] == (1 << x) && player1Projy[0] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                else if (player1Projx[1] == (1 << x) && player1Projy[1] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                else if (player1Projx[2] == (1 << x) && player1Projy[2] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                else if (player1Projx[3] == (1 << x) && player1Projy[3] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-        
-                else if (player2Projx[0] == (1 << x) && player2Projy[0] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                else if (player2Projx[1] == (1 << x) && player2Projy[1] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                else if (player2Projx[2] == (1 << x) && player2Projy[2] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                else if (player2Projx[3] == (1 << x) && player2Projy[3] == (1 << y)) mapTemp[x][y] = COLOR_PROJ;
-                //else if (player2Projx == (1 << x) && player2Projy == (1 << y)) mapArr[x][y] = COLOR_PROJ;
-                
-        
-
-            }
+        for(i = 0; i < 4; i++) {
+            mapArr[player1Projx[i]][player1Projy[i]] = PROJECTILE;
+            mapArr[player2Projx[i]][player2Projy[i]] = PROJECTILE;
         }
-    
-        mapArr = mapTemp;
+
+        mapArr[player1Posx][player1Posy] = PLAYER1;
+        mapArr[player2Posx][player2Posy] = PLAYER2;
     }
 }
