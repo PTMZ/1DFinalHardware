@@ -36,6 +36,10 @@ module player #(
     
     dff storex[3](#INIT(STARTX), .rst(rst));
     dff storey[3](#INIT(STARTY), .rst(rst));
+    fsm state(.rst(rst)) = {WAIT, READY, COMPUTENEXT, CHECKOUTOFBOUNDS, CHECKOBSTACLES, CHECKOTHERPLAYER, UPDATE}; // create states for testing each of the fsm.
+    dff newx[3];
+    dff newy[3];
+    
     // dff cooldown[22];
   }
   // instantiate i for counting
@@ -45,9 +49,22 @@ module player #(
   alu16 alu;
   sig oldx[3];
   sig oldy[3];
-  sig newx[3];
-  sig newy[3];
-
+  
+  
+  //for checks
+  sig upordown;
+  sig leftorright;
+  sig uporright;
+  sig downorleft;
+  sig anybutton;
+  
+  sig outofbounds;
+  
+  sig currenplayerxy[6];
+  sig otherplayerxy[6];
+  
+  sig obstacleobstruction;
+  
   always {
     counter.amount = 10000000;
     counter.resetCd = 0;
@@ -66,112 +83,96 @@ module player #(
     oldx = storex.q;
     oldy = storey.q;
     
-    // Create variable name newx, newy that is used to check for conditions
-    newx = 0;
-    newy = 0;
     
-    if (counter.ans == 1){
-      // Movement to update position
-      if(edUp.out){
-        alu.alufn = 6b000000; // for adding
-        alu.a = storey.q;
-        alu.b = 1;
-        newy = alu.out;
-        // Check boundary if under flow 0-1 = -1 which would be 111 is same as 7 in binary so reduction and
-        if (&newy)
-          storey.d = oldy;
-        // Check if other player is in same square
-        else if (oldx == otherplayerx && newy == otherplayery)
-          storey.d = oldy;
-        // Check the obstacle list at the location of the new player position
-        else if (|(obstacles[oldx][newy]) == 1)
-          storey.d = oldy;
-        // Else Move
-        else
-          storey.d = newy;
-        
-        counter.resetCd = 1;
-      }
-      
-      if(edDown.out){
-        alu.alufn = 6b000001; // to subtract
-        alu.a = storey.q;
-        alu.b = 1;
-        newy = alu.out;
-        // Check boundary
-        if (&newy)
-          storey.d = oldy;
-        // Check if other player is in same square
-        else if (oldx == otherplayerx && newy == otherplayery)
-          storey.d = oldy;
-        // Check the obstacle list at the location of the new player position if it is 1 then don't move
-        else if (|(obstacles[oldx][newy]) == 1)
-          storey.d = oldy;
-        // Else Move
-        else
-          storey.d = newy;
-        
-        counter.resetCd = 1;
-      }
-      
-      if(edLeft.out){
-        alu.alufn = 6b000001; // to subtract
-        alu.a = storex.q;
-        alu.b = 1;
-        newx = alu.out;
-        // Check boundary
-        if (&newx)
-          storex.d = oldx;
-        // Check if other player is in same square
-        else if (newx == otherplayerx && oldy == otherplayery)
-          storex.d = oldx;
-        // Check the obstacle list at the location of the new player position if it is 1 then don't move
-        else if (|(obstacles[newx][oldy]) == 1)
-          storex.d = oldx;
-        // Else Move
-        else
-          storex.d = newx;
-        
-        counter.resetCd = 1;
-      }
-      
-      if(edRight.out){
-        alu.alufn = 6b000000; // for adding
-        alu.a = storex.q;
-        alu.b = 1;
-        newx = alu.out;
-        // Check boundary
-        if (&newx)
-          storex.d = oldx;
-        // Check if other player is in same square
-        else if (newx == otherplayerx && oldy == otherplayery)
-          storex.d = oldx;
-        // Check the obstacle list at the location of the new player position if it is 1 then don't move
-        else if (|(obstacles[newx][oldy]) == 1)
-          
-          storex.d = oldx;
-        // Else Move
-        else
-          storex.d = newx;
-        
-        counter.resetCd = 1;
-      }
-    }
     // Set to update the output to be the output calculated
     positionx = storex.q;
     positiony = storey.q;
+    alu.alufn = 6b000000;
+    alu.a = 0;
+    alu.b = 0;
     
+    // assign values
+    upordown = edUp.out || edDown.out;  //for checking
+    leftorright = edLeft.out || edRight.out; //for checking
+    uporright = edUp.out || edRight.out; //for checking add or sub
+    downorleft = edDown.out || edLeft.out;
+    anybutton = edUp.out || edDown.out || edLeft.out || edRight.out;
     
-    // checkcooldown
-    // cooldown.d = cooldown.q-1 >= 0 ? cooldown.q-1 : 0;
-    // to check if hit for each projectile check the x and y of player coincide with projectile.
-    //    i = 0;
-    //    for (i = 0; i <= PROJAMT; i++) {
-    // check each position at each index. Concatenation of both posx and posy assuming 1 health
-    //      if(projectileout[i] == c{storex.q, storey.q})
-    //        gameend = 1;
-    //      else
-    ///        gameend = 0;
+    // check outofbounds
+    outofbounds = (&newx.q|| &newy.q); //111 which is 7 when 3 bit 0-1 underflow or when out of bounds as display is 0-6
+    
+    // concatenate x and concatenate y
+    currenplayerxy = c{newx.q, newy.q};
+    otherplayerxy = c{otherplayerx, otherplayery};
+    
+    //check if new location has obstacles 1 if there is as each location is 3 bits if there is something then reduction would equal 1
+    obstacleobstruction = |(obstacles[newx.q][newy.q]);
+    
+    case (state.q) {
+      state.WAIT:
+        newx.d = storex.q; // set initial
+        newy.d = storey.q; // set initial
+        if (counter.ans == 1)
+          state.d = state.READY;
+      
+      
+      state.READY:
+        if(anybutton){
+          state.d = state.CHECKOUTOFBOUNDS;
+          if(upordown){
+            alu.a = storey.q;
+            newy.d = alu.out;
+          }
+          if(leftorright){
+            alu.a = storex.q;
+            newx.d = alu.out;
+          }
+          
+          alu.b = 1; // constant 1
+          
+          if(uporright){
+            alu.alufn = 6b000000; // add to old value
+          }
+          if(downorleft){
+            alu.alufn = 6b000001; // subtract from the value
+          }
+        }
+      
+      state.CHECKOUTOFBOUNDS:
+        state.d = state.CHECKOBSTACLES;
+        alu.alufn = 6b110010; //CMPEQ
+        alu.a = obstacleobstruction;
+        alu.b = 1; // always check against 1 
+        if(alu.out){
+          newx.d = storex.q; // reset the value to update to back to original
+          newy.d = storey.q; // reset the value to update to back to original
+        }
+      
+      state.CHECKOBSTACLES:
+        state.d = state.CHECKOTHERPLAYER;
+        alu.alufn = 6b110010; //CMPEQ
+        alu.a = obstacleobstruction;
+        alu.b = 1; // always check against 1 
+        if (alu.out){ // means both same position
+          newx.d = storex.q; // reset the value to update to back to original
+          newy.d = storey.q; // reset the value to update to back to original
+        }
+      
+      state.CHECKOTHERPLAYER:
+        state.d = state.UPDATE;
+        alu.alufn = 6b110010; //CMPEQ
+        alu.a = currenplayerxy;
+        alu.b = otherplayerxy;
+        if (alu.out){ // means both same position
+          newx.d = storex.q; // reset the value to update to back to original
+          newy.d = storey.q; // reset the value to update to back to original
+        }
+      state.UPDATE:
+        storex.d = newx.q;
+        storey.d = newy.q;
+        state.d = state.WAIT;
+    }
+
     gameend = 0;
     for (i = 0; i < PROJAMT; i++) {
       if (projectileoutx[i] == storex.q && projectileouty[i] == storey.q)
