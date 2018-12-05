@@ -1,0 +1,17 @@
+module obstacles (
+input clk,
+input rst,
+output obstacle[7][7][3]
+) {
+
+always {
+    
+    obstacle[6] = c{{3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}};
+    obstacle[5] = c{{3d0}, {3d0}, {3d3}, {3d0}, {3d3}, {3d0}, {3d0}};
+    obstacle[4] = c{{3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}};
+    obstacle[3] = c{{3d0}, {3d0}, {3d0}, {3d3}, {3d0}, {3d0}, {3d0}};
+    obstacle[2] = c{{3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}};
+    obstacle[1] = c{{3d0}, {3d0}, {3d3}, {3d0}, {3d3}, {3d0}, {3d0}};
+    obstacle[0] = c{{3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}, {3d0}};
+    }
+}

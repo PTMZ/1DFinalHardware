@@ -1,0 +1,149 @@
+module projectiles #(
+    PROJAMT = 4 : PROJAMT > 0 // Width of the output
+  )
+  
+  (
+    input clk,  // clock
+    input rst,  // reset
+    input up,
+    input down,
+    input left,
+    input right,
+    input playerX[3],
+    input playerY[3],
+    // input remove[2],
+    //output health[2], // 1-4 health
+    output positionx[4][3], // 7bits of x 1 hot encoding
+    output positiony[4][3], // 7bits of y 1 hot encoding
+    output count[2],
+    output cd
+    //output gameend
+  ) {
+  
+  .clk(clk) {
+    edge_detector edUp(#RISE(1), #FALL(0)); // detect rising edges
+    edge_detector edDown(#RISE(1), #FALL(0)); // detect rising edges
+    edge_detector edLeft(#RISE(1), #FALL(0)); // detect rising edges
+    edge_detector edRight(#RISE(1), #FALL(0)); // detect rising edges
+    
+    edge_detector edUpd[4](#RISE(1), #FALL(0));
+    
+    button_conditioner bcUp;     // button input conditioner
+    button_conditioner bcDown;     // button input reset_conditioner
+    button_conditioner bcLeft;     // button input reset_conditioner
+    button_conditioner bcRight; // button input conditioner
+    customCounter counter(.rst(rst));
+    
+    dff storex[4][3](.rst(rst));
+    dff storey[4][3](.rst(rst));
+    dff dir[4][2](.rst(rst));
+    dff upd[4][23](.rst(rst));
+    dff ptr[2](.rst(rst));
+    
+    
+    // dff cooldown[22];
+  }
+  // instantiate i for counting
+  //sig i;
+  
+  var i,j;
+  always {
+    counter.amount = 10000000;
+    counter.resetCd = 0;
+    
+    bcUp.in = up;
+    bcDown.in = down;
+    bcLeft.in = left;
+    bcRight.in = right;
+    
+    edUp.in = bcUp.out;
+    edDown.in = bcDown.out;
+    edLeft.in = bcLeft.out;
+    edRight.in = bcRight.out;
+    
+    cd = upd.q[0][22];
+    
+    if (counter.ans == 1){
+      if(edUp.out){
+        // Check boundary
+        if (!&(playerY + 1)){
+          storex.d[ptr.q] = playerX;
+          storey.d[ptr.q] = playerY + 1;
+          dir.d[ptr.q] = 0;
+          ptr.d = ptr.q + 1;
+        }
+        upd.d[ptr.q] = 0;
+        counter.resetCd = 1;
+      }
+      
+      if(edDown.out){
+        // Check boundary
+        if (!&(playerY - 1)){
+          storex.d[ptr.q] = playerX;
+          storey.d[ptr.q] = playerY - 1;
+          dir.d[ptr.q] = 1;
+          ptr.d = ptr.q + 1;
+        }
+        upd.d[ptr.q] = 0;
+        counter.resetCd = 1;
+      }
+      
+      if(edLeft.out){
+        // Check boundary
+        if (!&(playerX - 1)){
+          storex.d[ptr.q] = playerX - 1;
+          storey.d[ptr.q] = playerY;
+          dir.d[ptr.q] = 2;
+          ptr.d = ptr.q + 1;
+        }
+        upd.d[ptr.q] = 0;
+        counter.resetCd = 1;
+      }
+      
+      if(edRight.out){
+        // Check boundary
+        if (!&(playerX + 1)){
+          storex.d[ptr.q] = playerX + 1;
+          storey.d[ptr.q] = playerY;
+          dir.d[ptr.q] = 3;
+          ptr.d = ptr.q + 1;
+        }
+        upd.d[ptr.q] = 0;
+        counter.resetCd = 1;
+      }
+      
+    }
+    
+    for(j=0; j<4; j++){
+      upd.d[j] = (storex.q[j] == 7 || storey.q[j] == 7) ? 0 : upd.q[j] + 1;
+      edUpd.in[j] = upd.q[j][22];
+      
+      if(edUpd.out[j] == 1){
+        
+        if(dir.q[j] == 0){
+          //storex.d[i] = storex.q[i];
+          storey.d[j] = &storey.q[j] ? 7 : storey.q[j] + 1;
+        }
+        if(dir.q[j] == 1){
+          //storex.d[i] = storex.q[i];
+            storey.d[j] = &storey.q[j] ? 7 : storey.q[j] - 1;
+        }
+        if(dir.q[j] == 2){
+            storex.d[j] = &storex.q[j] ? 7 : storex.q[j] - 1;
+          //storey.d[i] = storey.q[i];
+        }
+        if(dir.q[j] == 3){
+          storex.d[j] = &storex.q[j] ? 7 : storex.q[j] + 1;
+          //storey.d[i] = storey.q[i];
+        }
+      }
+    }
+    
+    
+    // Set to update the output to be the output calculated
+    positionx = storex.q;
+    positiony = storey.q;
+    count = ptr.q;
+    
+  }
+}

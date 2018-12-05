@@ -1,0 +1,172 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,       // AVR RX buffer full
+    
+    input p1moveUp,
+    input p1moveDown,
+    input p1moveLeft,
+    input p1moveRight,
+    input p1fireUp,
+    input p1fireDown,
+    input p1fireLeft,
+    input p1fireRight,
+    
+    input p2moveUp,
+    input p2moveDown,
+    input p2moveLeft,
+    input p2moveRight,
+    input p2fireUp,
+    input p2fireDown,
+    input p2fireLeft,
+    input p2fireRight,
+    output dataline[7]
+  ) {
+  
+  sig rst;                  // reset signal
+
+  //constants:
+  const PLAYER1_POSX = 3d1;
+  const PLAYER1_POSY = 3d1;
+  const PLAYER2_POSX = 3d5;
+  const PLAYER2_POSY = 3d5;
+  const PLAYER1_PROJX = 3d1;
+  const PLAYER1_PROJY = 3d1;
+  const PLAYER2_PROJX = 3d1;
+  const PLAYER2_PROJY = 3d1;
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    map map(.rst(rst));
+    display display(.rst(rst));
+    player p1(.rst(rst), #STARTX(PLAYER1_POSX), #STARTY(PLAYER1_POSY));
+    player p2(.rst(rst), #STARTX(PLAYER2_POSX), #STARTY(PLAYER2_POSY));
+    projectiles proj1(.rst(rst));
+    projectiles proj2(.rst(rst));
+    obstacles obs(.rst(rst));
+    //ws2812b ws2812b[7](.rst(rst));
+    fsm gameState = {GAME, END, END2};
+  }
+  
+  sig mapEnd[7][7][3];
+  sig mapEnd2[7][7][3];
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    led = 8h00;             // turn LEDs off
+    led[0] = proj1.cd;
+    led[1] = p2fireDown;
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    mapEnd[6] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    mapEnd[5] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    mapEnd[4] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    mapEnd[3] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    mapEnd[2] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    mapEnd[1] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    mapEnd[0] = c{{3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}, {3d1}};
+    
+    mapEnd2[6] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    mapEnd2[5] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    mapEnd2[4] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    mapEnd2[3] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    mapEnd2[2] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    mapEnd2[1] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    mapEnd2[0] = c{{3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}, {3d2}};
+    
+    map.player1Posx = p1.positionx;
+    map.player1Posy = p1.positiony;
+    map.player2Posx = p2.positionx;
+    map.player2Posy = p2.positiony;
+
+    map.player1Projx = proj1.positionx;
+    map.player1Projy = proj1.positiony;
+    map.player2Projx = proj2.positionx;
+    map.player2Projy = proj2.positiony;
+    
+    map.obstacle = obs.obstacle;
+    
+    
+    p1.up=p1moveUp;
+    p1.down=p1moveDown;
+    p1.left=p1moveLeft;
+    p1.right=p1moveRight;
+    
+    p1.projectileoutx = proj2.positionx;
+    p1.projectileouty = proj2.positiony;
+    p1.otherplayerx = p2.positionx;
+    p1.otherplayery = p2.positiony;
+    p1.obstacles = obs.obstacle;
+    
+    p2.up=p2moveUp;
+    p2.down=p2moveDown;
+    p2.left=p2moveLeft;
+    p2.right=p2moveRight;
+    
+    p2.projectileoutx = proj1.positionx;
+    p2.projectileouty = proj1.positiony;
+    p2.otherplayerx = p1.positionx;
+    p2.otherplayery = p1.positiony;
+    p2.obstacles = obs.obstacle;
+    
+    proj1.playerX = p1.positionx;
+    proj1.playerY = p1.positiony;
+    proj1.up = p1fireUp;
+    proj1.down = p1fireDown;
+    proj1.left = p1fireLeft;
+    proj1.right = p1fireRight;
+    
+    
+    proj2.playerX = p2.positionx;
+    proj2.playerY = p2.positiony;
+    proj2.up = p2fireUp;
+    proj2.down = p2fireDown;
+    proj2.left = p2fireLeft;
+    proj2.right = p2fireRight;
+    
+    case(gameState.q){
+      gameState.GAME:
+        display.mapArr = map.mapArr;
+        dataline = display.datalines;
+        if(p1.gameend) gameState.d = gameState.END2;
+        if(p2.gameend) gameState.d = gameState.END;
+      gameState.END:
+        display.mapArr = mapEnd;
+        dataline = display.datalines;
+        if(|c{p1moveUp, p2moveUp}){
+          rst = 1;
+          gameState.d = gameState.GAME;
+        }
+      gameState.END2:
+        display.mapArr = mapEnd2;
+        dataline = display.datalines;
+        if(|c{p1moveUp, p2moveUp}){
+          rst = 1;
+          gameState.d = gameState.GAME;
+        }
+      default:
+        display.mapArr = map.mapArr;
+        dataline = display.datalines;
+        if(p1.gameend || p2.gameend){
+          rst = 1;
+          gameState.d = gameState.END;
+        }
+    }
+    
+    
+  }
+}

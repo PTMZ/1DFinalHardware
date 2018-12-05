@@ -1,0 +1,49 @@
+module map (
+    input clk,
+    input rst,
+    input player1Posx[3],
+    input player1Posy[3],
+    input player2Posx[3],
+    input player2Posy[3],
+    input player1Projx[4][3],
+    input player1Projy[4][3],
+    input player2Projx[4][3],
+    input player2Projy[4][3],
+    input obstacle[7][7][3],
+    //input player2Proj,
+    // input showBits[7],
+    output mapArr[7][7][3]
+  ) {
+  //sig rst; //reset signal
+  
+  //const COLOR_BLACK = 24h000000;   //6 digits cuz each hexa digit represents 4 binary
+  //const COLOR_P1 = 24h00ff00;      //red
+  //sig mapTemp[7][7][24];
+  //const COLOR_P2 = 24h0000ff;      //blue
+  //const COLOR_PROJ = 24h00ffff;    //purple
+  //const COLOR_OBSTACLE = 24hff0000;//dark green
+  
+  const PLAYER1 = 1;
+  const PLAYER2 = 2;
+  const PROJECTILE = 4;
+  
+  //var x, y, pr;
+  var i;
+  
+  always {
+    
+    mapArr = obstacle;
+    
+    for(i = 0; i < 4; i++) {
+      if(player1Projx[i]<7 && player1Projy[i]<7){
+        mapArr[player1Projx[i]][player1Projy[i]] = PROJECTILE;
+      }
+      if(player2Projx[i]<7 && player2Projy[i]<7){
+        mapArr[player2Projx[i]][player2Projy[i]] = PROJECTILE;
+      }
+    }
+    
+    mapArr[player1Posx][player1Posy] = PLAYER1;
+    mapArr[player2Posx][player2Posy] = PLAYER2;
+  }
+}

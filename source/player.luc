@@ -1,0 +1,173 @@
+module player #(
+    PROJAMT = 4 : PROJAMT > 0, // Width of the output
+    STARTX = 3b1,
+    STARTY = 3b1
+  )
+  
+  (
+    input clk,  // clock
+    input rst,  // reset
+    input up,
+    input down,
+    input left,
+    input right,
+    input projectileoutx[PROJAMT][3],
+    input projectileouty[PROJAMT][3],
+    input otherplayerx[3],
+    input otherplayery[3],
+    input obstacles[7][7][3],
+    //output health[2], // 1-4 health
+    output positionx[3], // 3bits of x 0-7 where 7 is
+    output positiony[3], // 3bits of y 0-7 where 7 is for NULL hot encoding
+    output gameend
+  ) {
+  
+  .clk(clk) {
+    edge_detector edUp(#RISE(1), #FALL(0)); // detect rising edges
+    edge_detector edDown(#RISE(1), #FALL(0)); // detect rising edges
+    edge_detector edLeft(#RISE(1), #FALL(0)); // detect rising edges
+    edge_detector edRight(#RISE(1), #FALL(0)); // detect rising edges
+    
+    button_conditioner bcUp;     // button input conditioner
+    button_conditioner bcDown;     // button input reset_conditioner
+    button_conditioner bcLeft;     // button input reset_conditioner
+    button_conditioner bcRight; // button input conditioner
+    customCounter counter(.rst(rst));
+    
+    dff storex[3](#INIT(STARTX), .rst(rst));
+    dff storey[3](#INIT(STARTY), .rst(rst));
+    // dff cooldown[22];
+  }
+  // instantiate i for counting
+  var i;
+  
+  
+  sig oldx[3];
+  sig oldy[3];
+  sig newx[3];
+  sig newy[3];
+  
+  always {
+    counter.amount = 10000000;
+    counter.resetCd = 0;
+    
+    bcUp.in = up;
+    bcDown.in = down;
+    bcLeft.in = left;
+    bcRight.in = right;
+    
+    edUp.in = bcUp.out;
+    edDown.in = bcDown.out;
+    edLeft.in = bcLeft.out;
+    edRight.in = bcRight.out;
+    
+    // Create variable name oldx, oldy
+    oldx = storex.q;
+    oldy = storey.q;
+    
+    // Create variable name newx, newy that is used to check for conditions
+    newx = 0;
+    newy = 0;
+    
+    if (counter.ans == 1){
+      // Movement to update position
+      if(edUp.out){
+        newy = storey.q + 1;
+        // Check boundary if under flow 0-1 = -1 which would be 111 is same as 7 in binary so reduction and
+        if (&newy)
+          storey.d = oldy;
+        // Check if other player is in same square
+        else if (oldx == otherplayerx && newy == otherplayery)
+          storey.d = oldy;
+        // Check the obstacle list at the location of the new player position
+        else if (|(obstacles[oldx][newy]) == 1)
+          storey.d = oldy;
+        // Else Move
+        else
+          storey.d = newy;
+        
+        counter.resetCd = 1;
+      }
+      
+      if(edDown.out){
+        newy = storey.q - 1;
+        // Check boundary
+        if (&newy)
+          storey.d = oldy;
+        // Check if other player is in same square
+        else if (oldx == otherplayerx && newy == otherplayery)
+          storey.d = oldy;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (|(obstacles[oldx][newy]) == 1)
+          storey.d = oldy;
+        // Else Move
+        else
+          storey.d = newy;
+        
+        counter.resetCd = 1;
+      }
+      
+      if(edLeft.out){
+        newx = storex.q - 1;
+        // Check boundary
+        if (&newx)
+          storex.d = oldx;
+        // Check if other player is in same square
+        else if (newx == otherplayerx && oldy == otherplayery)
+          storex.d = oldx;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (|(obstacles[newx][oldy]) == 1)
+          storex.d = oldx;
+        // Else Move
+        else
+          storex.d = newx;
+        
+        counter.resetCd = 1;
+      }
+      
+      if(edRight.out){
+        newx = storex.q + 1;
+        // Check boundary
+        if (&newx)
+          storex.d = oldx;
+        // Check if other player is in same square
+        else if (newx == otherplayerx && oldy == otherplayery)
+          storex.d = oldx;
+        // Check the obstacle list at the location of the new player position if it is 1 then don't move
+        else if (|(obstacles[newx][oldy]) == 1)
+          
+          storex.d = oldx;
+        // Else Move
+        else
+          storex.d = newx;
+        
+        counter.resetCd = 1;
+      }
+    }
+    // Set to update the output to be the output calculated
+    positionx = storex.q;
+    positiony = storey.q;
+    
+    
+    // checkcooldown
+    // cooldown.d = cooldown.q-1 >= 0 ? cooldown.q-1 : 0;
+    // to check if hit for each projectile check the x and y of player coincide with projectile.
+    //    i = 0;
+    //    for (i = 0; i <= PROJAMT; i++) {
+    // check each position at each index. Concatenation of both posx and posy assuming 1 health
+    //      if(projectileout[i] == c{storex.q, storey.q})
+    //        gameend = 1;
+    //      else
+    ///        gameend = 0;
+    gameend = 0;
+    for (i = 0; i < PROJAMT; i++) {
+      if (projectileoutx[i] == storex.q && projectileouty[i] == storey.q)
+        gameend = 1;
+    }
+    if(rst){
+      storex.d = STARTX;
+      storey.d = STARTY;
+    }   
+  }
+}
+

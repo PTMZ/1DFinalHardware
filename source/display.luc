@@ -1,0 +1,108 @@
+module display (
+    input clk, //clock
+    input rst, //reset
+    input mapArr[7][7][3],
+    output datalines[7]
+  )
+  {
+  
+  
+  //different LED states
+  const LED_OFF=0;    // 000
+  const P1=1;     //001
+  const P2=2;     //010
+  const OBS=3;     //011
+  const PROJ=4;     //100
+  
+  //code for different colors
+  
+  const COLOR_BLACK=24h000000;
+  const COLOR_RED= 24h00ff00;
+  const COLOR_BLUE= 24h0000ff;
+  const COLOR_GREEN= 24hff0000;
+  const COLOR_PURPLE=24h00ffff;
+  dff counter[23](.clk(clk), .rst(rst)); //why is counter 21?
+  sig foo[13];
+  sig ledNo[3];
+  sig ledNo2[3];
+  sig allcolors[5][24];
+  sig curStatus[7][3];
+  sig curColor[7][24];
+  var r;
+  
+  always {
+    counter.d = counter.q + 1;
+    datalines = 7b0;
+    allcolors = c{{COLOR_PURPLE}, {COLOR_GREEN}, {COLOR_BLUE}, {COLOR_RED}, {COLOR_BLACK}};
+    
+    ledNo = counter.q / (64*24);
+    ledNo2 = counter.q / (64*24) - 7;
+    foo = counter.q - ((counter.q/(64*24))*(64*24));
+    
+    for(r=0; r<7; r=r+2){
+      curStatus[r] = mapArr[r][ledNo];
+      curColor[r] = allcolors[curStatus[r]];
+    }
+    for(r=1; r<7; r=r+2){
+      curStatus[r] = mapArr[r][ledNo2];
+      curColor[r] = allcolors[curStatus[r]];
+    }
+    
+    if (counter.q < 64*24*7) {
+      
+      if (curColor[0][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[0] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[0] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (curColor[2][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[2] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[2] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (curColor[4][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[4] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[4] = 1; //corresponds to Th of logic bit 1
+      }
+      
+      if (curColor[6][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[6] = 1; //corresponds to Th of logic bit 0
+        else datalines[6] = 0;
+      }
+      else {
+        if (foo[5:0] < 40) datalines[6] = 1; //corresponds to Th of logic bit 1
+        else datalines[6] = 0;
+      }
+    }
+    
+    if (counter.q < 2*64*24*7 & counter.q >= 64*24*7) {
+      
+      if (curColor[1][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[1] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[1] = 1; //corresponds to Th of logic bit 1
+      }
+      if (curColor[3][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[3] = 1; //corresponds to Th of logic bit 0
+      }
+      else {
+        if (foo[5:0] < 40) datalines[3] = 1; //corresponds to Th of logic bit 1
+      }
+      if (curColor[5][23-(foo>>6)] == 0) {
+        if (foo[5:0] < 20) datalines[5] = 1; //corresponds to Th of logic bit 0
+        else datalines[5] = 0;
+      }
+      else {
+        if (foo[5:0] < 40) datalines[5] = 1; //corresponds to Th of logic bit 1
+        else datalines[5] = 0;
+      }
+    }
+  }
+}
