@@ -41,12 +41,13 @@ module player #(
   // instantiate i for counting
   var i;
   
-  
+  // instantiate the alu module
+  alu16 alu;
   sig oldx[3];
   sig oldy[3];
   sig newx[3];
   sig newy[3];
-  
+
   always {
     counter.amount = 10000000;
     counter.resetCd = 0;
@@ -72,7 +73,10 @@ module player #(
     if (counter.ans == 1){
       // Movement to update position
       if(edUp.out){
-        newy = storey.q + 1;
+        alu.alufn = 6b000000; // for adding
+        alu.a = storey.q;
+        alu.b = 1;
+        newy = alu.out;
         // Check boundary if under flow 0-1 = -1 which would be 111 is same as 7 in binary so reduction and
         if (&newy)
           storey.d = oldy;
@@ -90,7 +94,10 @@ module player #(
       }
       
       if(edDown.out){
-        newy = storey.q - 1;
+        alu.alufn = 6b000001; // to subtract
+        alu.a = storey.q;
+        alu.b = 1;
+        newy = alu.out;
         // Check boundary
         if (&newy)
           storey.d = oldy;
@@ -108,7 +115,10 @@ module player #(
       }
       
       if(edLeft.out){
-        newx = storex.q - 1;
+        alu.alufn = 6b000001; // to subtract
+        alu.a = storex.q;
+        alu.b = 1;
+        newx = alu.out;
         // Check boundary
         if (&newx)
           storex.d = oldx;
@@ -126,7 +136,10 @@ module player #(
       }
       
       if(edRight.out){
-        newx = storex.q + 1;
+        alu.alufn = 6b000000; // for adding
+        alu.a = storex.q;
+        alu.b = 1;
+        newx = alu.out;
         // Check boundary
         if (&newx)
           storex.d = oldx;
@@ -167,7 +180,6 @@ module player #(
     if(rst){
       storex.d = STARTX;
       storey.d = STARTY;
-    }   
+    }
   }
 }
-
