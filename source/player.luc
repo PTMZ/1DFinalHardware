@@ -92,43 +92,45 @@ module player #(
     alu.b = 0;
     
     // assign values
-    upordown = edUp.out || edDown.out;  //for checking
-    leftorright = edLeft.out || edRight.out; //for checking
-    uporright = edUp.out || edRight.out; //for checking add or sub
-    downorleft = edDown.out || edLeft.out;
+    upordown = edUp.out || edDown.out;  // for checking if to update x or y, 1 means update y
+    leftorright = edLeft.out || edRight.out; // for checking if to update x or y, 1 means update x
+    uporright = edUp.out || edRight.out; // for checking add or sub, 1 for add
+    downorleft = edDown.out || edLeft.out; // for checking add or sub, 1 for sub
     anybutton = edUp.out || edDown.out || edLeft.out || edRight.out;
     
     // check outofbounds
-    outofbounds = (&newx.q|| &newy.q); //111 which is 7 when 3 bit 0-1 underflow or when out of bounds as display is 0-6
+    outofbounds = (&newx.q|| &newy.q); // 111 which is 7 when 3 bit 0-1 underflow or when out of bounds as display is 0-6
     
     // concatenate x and concatenate y
-    currenplayerxy = c{newx.q, newy.q};
-    otherplayerxy = c{otherplayerx, otherplayery};
+    currenplayerxy = c{newx.q, newy.q}; // concatenate to have easier comparing in 1 clock cycle
+    otherplayerxy = c{otherplayerx, otherplayery}; // concatenate to have easier comparing in 1 clock cycle
     
-    //check if new location has obstacles 1 if there is as each location is 3 bits if there is something then reduction would equal 1
+    //check if new location has obstacles 1 if there is as each location is 3 bits if there is something then reduction would equal 1, all is 1 except 000 which is nothing.
     obstacleobstruction = |(obstacles[newx.q][newy.q]);
     
     case (state.q) {
       state.WAIT:
-        newx.d = storex.q; // set initial
-        newy.d = storey.q; // set initial
+        storex.d = storex.q // not sure if needed but newx will change so wiring it to keep it same
+        storey.d = storey.q // not sure if needed but newy will change so wiring it to keep it the sam
+        newx.d = storex.q; // set initial x
+        newy.d = storey.q; // set initial y 
         if (counter.ans == 1)
-          state.d = state.READY;
+          state.d = state.READY; // only change the state when the counter has cooled down
       
       
       state.READY:
         if(anybutton){
-          state.d = state.CHECKOUTOFBOUNDS;
+          state.d = state.CHECKOUTOFBOUNDS; // change to next state if any button pressed
           if(upordown){
-            alu.a = storey.q;
-            newy.d = alu.out;
+            alu.a = storey.q; // if up or down put in current y
+            newy.d = alu.out; // set the output to update the y as well
           }
           if(leftorright){
-            alu.a = storex.q;
-            newx.d = alu.out;
+            alu.a = storex.q; // if left or right put in current x
+            newx.d = alu.out; // set the output to update the x as well
           }
           
-          alu.b = 1; // constant 1
+          alu.b = 1; // constant 1 as we are always moving 1 space
           
           if(uporright){
             alu.alufn = 6b000000; // add to old value
@@ -139,10 +141,13 @@ module player #(
         }
       
       state.CHECKOUTOFBOUNDS:
+        newx.d = newx.q; // not sure if needed but if it wireconnects from the previous, alu.out will change so rewiring to account for it
+        newy.d = newy.q; // not sure if needed but if it wireconnects from the previous, alu.out will change so rewiring to account for it
+        
         state.d = state.CHECKOBSTACLES;
         alu.alufn = 6b110010; //CMPEQ
         alu.a = obstacleobstruction;
-        alu.b = 1; // always check against 1 
+        alu.b = 1; // always check against 1
         if(alu.out){
           newx.d = storex.q; // reset the value to update to back to original
           newy.d = storey.q; // reset the value to update to back to original
@@ -152,7 +157,7 @@ module player #(
         state.d = state.CHECKOTHERPLAYER;
         alu.alufn = 6b110010; //CMPEQ
         alu.a = obstacleobstruction;
-        alu.b = 1; // always check against 1 
+        alu.b = 1; // always check against 1
         if (alu.out){ // means both same position
           newx.d = storex.q; // reset the value to update to back to original
           newy.d = storey.q; // reset the value to update to back to original
@@ -168,11 +173,11 @@ module player #(
           newy.d = storey.q; // reset the value to update to back to original
         }
       state.UPDATE:
-        storex.d = newx.q;
-        storey.d = newy.q;
+        storex.d = newx.q; // update to the newx, if does not update is already taken into account
+        storey.d = newy.q; // update to the newy, if does not update already taken into account.
         state.d = state.WAIT;
     }
-
+    
     gameend = 0;
     for (i = 0; i < PROJAMT; i++) {
       if (projectileoutx[i] == storex.q && projectileouty[i] == storey.q)
