@@ -33,12 +33,12 @@ module player #(
     button_conditioner bcLeft;     // button input reset_conditioner
     button_conditioner bcRight; // button input conditioner
     customCounter counter(.rst(rst));
+    register storex(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
+    register storey(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
+    register newx(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
+    register newy(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
     
-    dff storex[3](#INIT(STARTX), .rst(rst));
-    dff storey[3](#INIT(STARTY), .rst(rst));
     fsm state(.rst(rst)) = {WAIT, READY, COMPUTENEXT, CHECKOUTOFBOUNDS, CHECKOBSTACLES, CHECKOTHERPLAYER, UPDATE}; // create states for testing each of the fsm.
-    dff newx[3];
-    dff newy[3];
     
     // dff cooldown[22];
   }
@@ -47,9 +47,6 @@ module player #(
   
   // instantiate the alu module
   alu16 alu;
-  sig oldx[3];
-  sig oldy[3];
-  
   
   //for checks
   sig upordown;
@@ -79,14 +76,10 @@ module player #(
     edLeft.in = bcLeft.out;
     edRight.in = bcRight.out;
     
-    // Create variable name oldx, oldy
-    oldx = storex.q;
-    oldy = storey.q;
-    
     
     // Set to update the output to be the output calculated
-    positionx = storex.q;
-    positiony = storey.q;
+    positionx = storex.out;
+    positiony = storey.out;
     alu.alufn = 6b000000;
     alu.a = 0;
     alu.b = 0;
@@ -99,21 +92,33 @@ module player #(
     anybutton = edUp.out || edDown.out || edLeft.out || edRight.out;
     
     // check outofbounds
-    outofbounds = (&newx.q|| &newy.q); // 111 which is 7 when 3 bit 0-1 underflow or when out of bounds as display is 0-6
+    outofbounds = (&newx.out|| &newy.out); // 111 which is 7 when 3 bit 0-1 underflow or when out of bounds as display is 0-6
     
     // concatenate x and concatenate y
-    currenplayerxy = c{newx.q, newy.q}; // concatenate to have easier comparing in 1 clock cycle
+    currenplayerxy = c{newx.out, newy.out}; // concatenate to have easier comparing in 1 clock cycle
     otherplayerxy = c{otherplayerx, otherplayery}; // concatenate to have easier comparing in 1 clock cycle
     
     //check if new location has obstacles 1 if there is as each location is 3 bits if there is something then reduction would equal 1, all is 1 except 000 which is nothing.
-    obstacleobstruction = |(obstacles[newx.q][newy.q]);
+    obstacleobstruction = |(obstacles[newx.out][newy.out]);
+    
+    // set intial to get rid of error
+    storex.en = 0;
+    storey.en = 0;
+    newx.en = 0;
+    newy.en = 0;
+    
+    storex.data = STARTX;
+    storey.data = STARTY;
+    newx.data = STARTX;
+    newy.data = STARTY;
     
     case (state.q) {
       state.WAIT:
-        storex.d = storex.q // not sure if needed but newx will change so wiring it to keep it same
-        storey.d = storey.q // not sure if needed but newy will change so wiring it to keep it the sam
-        newx.d = storex.q; // set initial x
-        newy.d = storey.q; // set initial y 
+        storex.en = 0; // reset enable to not allow writing
+        storey.en = 0; // reset enable to not allow writing
+        newx.en = 0; // reset enable to not allow writing
+        newy.en = 0; // reset enable to not allow writing
+        
         if (counter.ans == 1)
           state.d = state.READY; // only change the state when the counter has cooled down
       
@@ -122,12 +127,14 @@ module player #(
         if(anybutton){
           state.d = state.CHECKOUTOFBOUNDS; // change to next state if any button pressed
           if(upordown){
-            alu.a = storey.q; // if up or down put in current y
-            newy.d = alu.out; // set the output to update the y as well
+            alu.a = storey.out; // if up or down put in current y
+            newy.en = 1;
+            newy.data = alu.out; // set the output to update the y as well
           }
           if(leftorright){
-            alu.a = storex.q; // if left or right put in current x
-            newx.d = alu.out; // set the output to update the x as well
+            alu.a = storex.out; // if left or right put in current x
+            newx.en = 1;
+            newx.data = alu.out; // set the output to update the x as well
           }
           
           alu.b = 1; // constant 1 as we are always moving 1 space
@@ -141,51 +148,76 @@ module player #(
         }
       
       state.CHECKOUTOFBOUNDS:
-        newx.d = newx.q; // not sure if needed but if it wireconnects from the previous, alu.out will change so rewiring to account for it
-        newy.d = newy.q; // not sure if needed but if it wireconnects from the previous, alu.out will change so rewiring to account for it
-        
         state.d = state.CHECKOBSTACLES;
+        newx.en = 0; // reset enable to not allow writing
+        newy.en = 0; // reset enable to not allow writing
         alu.alufn = 6b110010; //CMPEQ
         alu.a = obstacleobstruction;
         alu.b = 1; // always check against 1
         if(alu.out){
-          newx.d = storex.q; // reset the value to update to back to original
-          newy.d = storey.q; // reset the value to update to back to original
+          newx.en = 1; // only write if true
+          newy.en = 1; // only enable if true
+          newx.data = storex.out; // reset the value to update to back to original
+          newy.data = storey.out; // reset the value to update to back to original
         }
       
       state.CHECKOBSTACLES:
+        newx.en = 0; // reset enable to not allow writing
+        newy.en = 0; // reset enable to not allow writing
         state.d = state.CHECKOTHERPLAYER;
         alu.alufn = 6b110010; //CMPEQ
         alu.a = obstacleobstruction;
         alu.b = 1; // always check against 1
         if (alu.out){ // means both same position
-          newx.d = storex.q; // reset the value to update to back to original
-          newy.d = storey.q; // reset the value to update to back to original
+          newx.en = 1; // only write if true
+          newy.en = 1; // only enable if true
+          newx.data = storex.out; // reset the value to update to back to original
+          newy.data = storey.out; // reset the value to update to back to original
         }
       
       state.CHECKOTHERPLAYER:
         state.d = state.UPDATE;
+        newx.en = 0; // reset enable to not allow writing
+        newy.en = 0; // reset enable to not allow writing
         alu.alufn = 6b110010; //CMPEQ
         alu.a = currenplayerxy;
         alu.b = otherplayerxy;
         if (alu.out){ // means both same position
-          newx.d = storex.q; // reset the value to update to back to original
-          newy.d = storey.q; // reset the value to update to back to original
+          newx.en = 1; // only write if true
+          newy.en = 1; // only enable if true
+          newx.data = storex.out; // reset the value to update to back to original
+          newy.data = storey.out; // reset the value to update to back to original
         }
       state.UPDATE:
-        storex.d = newx.q; // update to the newx, if does not update is already taken into account
-        storey.d = newy.q; // update to the newy, if does not update already taken into account.
         state.d = state.WAIT;
+        storex.en = 1; // set enable to set new x value
+        storey.en = 1; // set enable to set new y value
+        storex.data = newx.out; // update to the newx, if does not update is already taken into account
+        storey.data = newy.out; // update to the newy, if does not update already taken into account.
+      
+      
+      default:
+        storex.en = 0;
+        storey.en = 0;
+        newx.en = 0;
+        newy.en = 0;
+        
+        storex.data = STARTX;
+        storey.data = STARTY;
+        newx.data = STARTX;
+        newy.data = STARTY;
     }
     
     gameend = 0;
     for (i = 0; i < PROJAMT; i++) {
-      if (projectileoutx[i] == storex.q && projectileouty[i] == storey.q)
+      if (projectileoutx[i] == storex.out && projectileouty[i] == storey.out)
         gameend = 1;
     }
     if(rst){
-      storex.d = STARTX;
-      storey.d = STARTY;
+      storex.en = 1;
+      storey.en = 1;
+      storex.data = STARTX;
+      storey.data = STARTY;
     }
   }
 }
