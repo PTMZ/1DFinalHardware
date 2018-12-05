@@ -34,9 +34,9 @@ module player #(
     button_conditioner bcRight; // button input conditioner
     customCounter counter(.rst(rst));
     register storex(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
-    register storey(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
+    register storey(#WIDTH(3), #INITIAL(STARTY), .rst(rst));
     register newx(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
-    register newy(#WIDTH(3), #INITIAL(STARTX), .rst(rst));
+    register newy(#WIDTH(3), #INITIAL(STARTY), .rst(rst));
     
     fsm state(.rst(rst)) = {WAIT, READY, COMPUTENEXT, CHECKOUTOFBOUNDS, CHECKOBSTACLES, CHECKOTHERPLAYER, UPDATE}; // create states for testing each of the fsm.
     
