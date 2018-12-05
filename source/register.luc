@@ -22,3 +22,4 @@ module register #(
     //regs.d=data;
     out=regs.q;
 }
+}
