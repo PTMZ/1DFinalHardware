@@ -8,11 +8,11 @@
     <src>comparator16.luc</src>
     <src>alu16.luc</src>
     <src>shift16.luc</src>
+    <src>register.luc</src>
     <src>obstacles.luc</src>
     <src>display.luc</src>
     <src>projectiles.luc</src>
     <src>tester16.luc</src>
-    <src>multi_seven_se.luc</src>
     <src>customCounter.luc</src>
     <src>player.luc</src>
     <src>seven_seg.luc</src>
