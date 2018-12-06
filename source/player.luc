@@ -125,6 +125,7 @@ module player #(
       
       state.READY:
         if(anybutton){
+          counter.resetCd = 1;
           state.d = state.CHECKOUTOFBOUNDS; // change to next state if any button pressed
           if(upordown){
             alu.a = storey.out; // if up or down put in current y
@@ -152,7 +153,7 @@ module player #(
         newx.en = 0; // reset enable to not allow writing
         newy.en = 0; // reset enable to not allow writing
         alu.alufn = 6b110010; //CMPEQ
-        alu.a = obstacleobstruction;
+        alu.a = outofbounds;
         alu.b = 1; // always check against 1
         if(alu.out){
           newx.en = 1; // only write if true
