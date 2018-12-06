@@ -147,14 +147,14 @@ module mojo_top (
       gameState.END:
         display.mapArr = mapEnd;
         dataline = display.datalines;
-        if(|c{p1moveUp, p2moveUp}){
+        if(p1moveUp&p1moveDown&p1moveLeft&p1moveRight&p2moveUp&p2moveDown&p2moveLeft&p2moveRight){
           rst = 1;
           gameState.d = gameState.GAME;
         }
       gameState.END2:
         display.mapArr = mapEnd2;
         dataline = display.datalines;
-        if(|c{p1moveUp, p2moveUp}){
+        if(p1moveUp&p1moveDown&p1moveLeft&p1moveRight&p2moveUp&p2moveDown&p2moveLeft&p2moveRight){
           rst = 1;
           gameState.d = gameState.GAME;
         }
